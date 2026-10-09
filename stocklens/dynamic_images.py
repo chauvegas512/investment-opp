@@ -64,7 +64,8 @@ def selected(ticker,inline=False):
 async def _fetch(ticker,name,website=None,brand=None):
     from find_images import search_images,PublicResolver
     # Dùng tên pháp lý để hạn chế nhầm ticker với từ thông thường.
-    queries=[f'"{name}" "{ticker}" trụ sở cửa hàng nhà máy',f'"{name}" "{ticker}" logo']
+    identity=brand or name
+    queries=[f'"{identity}" {ticker} trụ sở cửa hàng nhà máy',f'"{identity}" {ticker} doanh nghiệp']
     responses=await asyncio.gather(*(search_images(q,limit=4) for q in queries))
     found=[];seen=set()
     for rows in responses:

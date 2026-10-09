@@ -23,6 +23,10 @@ def load(identifier):
         row=db.execute('SELECT bundle FROM reports WHERE id=?',(identifier,)).fetchone()
     if not row:return None
     bundle=json.loads(row[0]);bundle['restored_from_export']=True
+    if bundle.get('schema_version')!=4:
+        from company_identity import attach
+        from research import enrich
+        attach(bundle['company'],bundle['ticker']);bundle=enrich(bundle);save(identifier,bundle)
     from datetime import datetime,date
     from zoneinfo import ZoneInfo
     latest=date.fromisoformat(str(bundle['prices'][-1]['date'])[:10])

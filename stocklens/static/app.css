@@ -4,3 +4,5 @@
 @media(max-width:760px){.has-result .guide{display:none}.history-strip>div{flex-wrap:nowrap;overflow-x:auto;min-width:0;max-width:100%;padding-bottom:4px}.history-link{white-space:nowrap;flex-shrink:0}.history-strip{align-items:center;margin:13px 0}.result-heading{margin-top:18px}}
 
 .image-card button{margin-top:12px;font-size:10px;white-space:normal}.image-gallery .image-card img{height:200px}.image-card p{margin:6px 0}@media(max-width:760px){.image-gallery .image-card img{height:150px}.image-card .button{padding:8px 10px}}
+
+.dataset-row{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #e8e0f1;font-size:10px}.dataset-row span{color:#74658d}.dataset-row b{max-width:62%;text-align:right;font-weight:600}.quote-note{font-size:9px;color:#E6DBFF;max-width:180px;line-height:1.5;margin-top:9px}.quote-note strong{display:inline;font-size:11px;letter-spacing:0}

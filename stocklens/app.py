@@ -24,6 +24,9 @@ app.mount('/static',StaticFiles(directory=ROOT/'static'),name='static')
 (ROOT/'data/image-cache').mkdir(parents=True,exist_ok=True)
 app.mount('/image-cache',StaticFiles(directory=ROOT/'data/image-cache'),name='image-cache')
 pool = ThreadPoolExecutor(max_workers=2, thread_name_prefix='stocklens')
+image_pool=ThreadPoolExecutor(max_workers=2,thread_name_prefix='stocklens-images')
+image_running=set()
+refreshing=set()
 lock = threading.Lock()
 jobs = {}
 TTL = 6*3600
@@ -48,14 +51,29 @@ def job_of(identifier):
 
 @app.get('/')
 def index():
-    return FileResponse(ROOT/'static/index.html')
+    return FileResponse(ROOT/'static/index.html',headers={'Cache-Control':'no-store'})
+
+def queue_images(b):
+    from company_images import for_company
+    from dynamic_images import load,search
+    ticker=b['ticker'];state=load(ticker)
+    if for_company(ticker):return
+    if state.get('status')=='NO_RESULTS' and time.time()-state.get('searched_at',0)<300:return
+    with lock:
+        if ticker in image_running:return
+        image_running.add(ticker)
+    def work():
+        try:search(ticker,b['company'].get('company_name') or ticker,False,b['company'].get('website'),b['company'].get('company_short_name'))
+        finally:
+            with lock:image_running.discard(ticker)
+    image_pool.submit(work)
 
 
 @app.get('/api/health')
 def health():
     from dynamic_images import provider
     with lock:
-        running_count=sum(j['status']=='running' for j in jobs.values())
+        running_count=sum(j['status']=='running' for j in jobs.values())+len(refreshing)
     return {'name':'StockLens','integrations':status(),'data_mode':'live + read-only SQLite archive; no synthetic stock data',
             'license_tier':os.getenv('STOCKLENS_TIER','NOT_CHECKED'),'image_provider':provider(),
             'running_jobs':running_count}
@@ -71,6 +89,7 @@ def run_job(identifier,ticker):
         save(identifier,bundle)
         with lock:
             jobs[identifier].update(status='done',message='Phân tích hoàn tất.',data=bundle)
+        queue_images(bundle)
     except Exception as exc:
         # Do not expose raw provider exceptions that might include credential URLs.
         message = str(exc) if isinstance(exc,ValueError) else 'Nguồn dữ liệu gặp lỗi ('+type(exc).__name__+'). Thử lại hoặc kiểm tra kết nối.'
@@ -116,11 +135,17 @@ def listed_symbols():
 def job(identifier:str):
     current = job_of(identifier)
     data=clean({k:v for k,v in current.items() if k!='started'})
+    with lock:data['refresh_status']='RUNNING' if identifier in refreshing else current.get('refresh_status','IDLE')
     if data.get('data'):
+        from research import enrich
+        if data['data'].get('schema_version')!=4:data['data']=enrich(data['data'])
+        queue_images(data['data'])
         from company_images import for_company
         data['data']['images']=for_company(data['data']['ticker'])
         from dynamic_images import load
         data['data']['image_search']=load(data['data']['ticker'])
+        with lock:
+            if data['data']['ticker'] in image_running:data['data']['image_search']['status']='SEARCHING'
     return data
 
 
@@ -129,6 +154,34 @@ def bundle_of(identifier):
     if job['status']!='done':
         raise HTTPException(409,'Phân tích chưa hoàn tất.')
     return job['data']
+
+@app.get('/api/jobs/{identifier}/quote')
+async def quote(identifier:str,force:bool=False):
+    from live_quote import fetch
+    return await run_in_threadpool(fetch,bundle_of(identifier)['ticker'],force)
+
+@app.post('/api/jobs/{identifier}/refresh',status_code=202)
+def refresh(identifier:str):
+    b=bundle_of(identifier)
+    with lock:
+        if identifier in refreshing:return {'status':'RUNNING'}
+        if len(refreshing)+sum(j['status']=='running' for j in jobs.values())>=2:
+            raise HTTPException(429,'Đang cập nhật 2 mã. Vui lòng đợi hoàn tất.')
+        refreshing.add(identifier)
+        jobs[identifier]['refresh_status']='RUNNING'
+    def work():
+        try:
+            from backfill import update
+            from history import save
+            refreshed=update(b)
+            save(identifier,refreshed)
+            with lock:jobs[identifier].update(data=refreshed,refresh_status='DONE')
+            queue_images(refreshed)
+        except Exception as exc:
+            with lock:jobs[identifier].update(refresh_status='ERROR',refresh_error=type(exc).__name__)
+        finally:
+            with lock:refreshing.discard(identifier)
+    pool.submit(work);return {'status':'RUNNING'}
 
 @app.post('/api/jobs/{identifier}/images/search')
 async def find_company_images(identifier:str,force:bool=False):

@@ -5,6 +5,9 @@ import pandas as pd
 from integration import MINER,clean
 
 ALIASES={
+    'bs_no_phai_tra':'total_liabilities','bs_tong_no_phai_tra':'total_liabilities',
+    'bs_vay_ngan_han':'short_term_borrowings','bs_vay_dai_han':'long_term_borrowings',
+    'is_thu_nhap_lai_thuan':'net_interest_income',
     'bs_tong_cong_tai_san':'total_assets',
     'bs_tong_tai_san':'total_assets',
     'bs_tai_san_ngan_han':'current_assets',
@@ -25,6 +28,7 @@ def miner_rows(ticker):
             frame=pd.read_parquet(path,filters=[('ticker','==',ticker)])
             for row in frame.to_dict('records'):
                 raw=row['item_code'];code=ALIASES.get(raw)
+                if raw.startswith('bs_von_chu_so_huu_') and str(row['item_name']).strip().casefold()=='vốn chủ sở hữu':code='equity'
                 if code is None: continue
                 rows.append({'ticker':ticker,'report_period':str(row['year']),'period_type':'annual',
                     'statement':statement,'item_code':code,'raw_item_code':raw,'item_name':row['item_name'],

@@ -17,9 +17,10 @@ def main():
         browser=p.chromium.launch(channel='msedge',headless=True);page=browser.new_page(viewport={'width':1450,'height':1000})
         page.on('pageerror',lambda e:errors.append(str(e)));page.goto(BASE+'/?job='+job,wait_until='networkidle')
         page.wait_for_selector('#result',state='visible');assert page.locator('#stock-name').inner_text()=='FRT'
-        assert page.locator('#image-gallery .image-card').count()>=4
-        page.locator('#image-gallery').scroll_into_view_if_needed();page.screenshot(path=str(qa/'FRT-gallery.png'))
-        buttons=page.locator('#image-gallery button');assert buttons.count()>0
+        assert page.locator('#image-gallery').is_hidden()
+        assert page.locator('#find-images').is_hidden()
+        assert any(i.get('selected') for i in search['images'])
+        page.screenshot(path=str(qa/'FRT-overview.png'))
         report=browser.new_page();report.set_content(markup.text,wait_until='load');report.locator('.report-page').first.screenshot(path=str(qa/'FRT-cover.png'))
         assert not errors,errors;browser.close()
     print(json.dumps({'ticker':'FRT','images':len(search['images']),'provider':search['provider'],'cover':'PASS','browser_errors':errors}))

@@ -201,6 +201,8 @@ def fetch_bundle(ticker, progress=lambda message: None):
         price_diag.append({'source':'X10 SQLite','status':'ARCHIVE_FALLBACK'})
     if benchmark.empty:
         benchmark=cached.get('benchmark_daily',pd.DataFrame())
+    from live_quote import closed_daily
+    prices=closed_daily(prices,now);benchmark=closed_daily(benchmark,now)
     if prices.empty:
         raise ValueError('Không lấy được giá của mã này. Kiểm tra mã và kết nối nguồn dữ liệu.')
     progress('Lấy thông tin doanh nghiệp và báo cáo tài chính…')
@@ -219,6 +221,8 @@ def fetch_bundle(ticker, progress=lambda message: None):
         meta_diag.append({'source':'VCI overview','status':type(exc).__name__})
     if not company.get('company_name'):
         company['company_name'] = ticker
+    from company_identity import attach
+    attach(company,ticker)
     annual, fa_diag = finance_rows(ticker, 'year')
     quarterly, fq_diag = finance_rows(ticker, 'quarter')
     from financial_adapter import miner_rows
@@ -243,8 +247,9 @@ def fetch_bundle(ticker, progress=lambda message: None):
         warnings.append('BCTC lấy từ SQLite lưu trữ; chưa đối chiếu kỳ và định nghĩa lợi nhuận với VCI. Không dùng để kết luận đầu tư.')
     if conflicts:
         warnings.append('Đã phát hiện chênh lệch BCTC trong SQLite; sử dụng VCI và giữ riêng số liệu lưu trữ để truy vết.')
-    bank='ngân hàng' in str(company.get('industry','')).lower() or 'ngân hàng' in str(company.get('sector','')).lower()
+    bank=bool(company.get('is_bank')) or 'ngân hàng' in str(company.get('company_name','')).lower() or 'ngân hàng' in str(company.get('industry','')).lower() or 'ngân hàng' in str(company.get('sector','')).lower()
     if bank:
+        warnings=[w for w in warnings if 'chưa đủ độ phủ' not in w]
         signal['final_action']='DATA_REVIEW'
         signal['action_label']='Ngân hàng: cần đánh giá chuyên ngành'
         for key in ('debt_equity','current_ratio','net_debt_ebitda','fa_score','unified_score'):
@@ -266,7 +271,7 @@ def fetch_bundle(ticker, progress=lambda message: None):
         warnings.append('Catalog báo cáo chưa sẵn sàng: ' + type(exc).__name__)
     progress('Khai thác tin doanh nghiệp có nguồn từ Miner…')
     try:
-        news = latest_news(ticker, company.get('company_name') or ticker)
+        news = latest_news(ticker, company.get('company_name') or ticker,company.get('company_short_name'),company.get('website'))
     except Exception as exc:
         news = []
         warnings.append('Nguồn tin chưa sẵn sàng: ' + type(exc).__name__)

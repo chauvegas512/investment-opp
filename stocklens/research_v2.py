@@ -32,17 +32,23 @@ def values_for(rows,period):
     return values
 
 def enrich(bundle):
+    bundle['schema_version']=4
     from disclosures import attach
     from indicators import technical_research
     attach(bundle)
     from x10_context import enrich_context
     enrich_context(bundle)
     facts=bundle.get('issuer_disclosures',{});basis=facts.get('basis_change',{}).get('effective_date','9999-01-01')
-    company=bundle['company'];bank=bool(company.get('is_bank')) or 'ngân hàng' in str(company.get('industry','')).lower() or 'ngân hàng' in str(company.get('sector','')).lower()
+    company=bundle['company'];bank=bool(company.get('is_bank')) or 'ngân hàng' in str(company.get('industry','')).lower() or 'ngân hàng' in str(company.get('sector','')).lower() or 'ngân hàng' in str(company.get('company_name','')).lower()
     news=[]
     for original in bundle.get('news',[]):
         item=dict(original);title=item.get('title','');name=str(company.get('company_name') or bundle['ticker'])
-        if not re.search(r'(?<![A-Z0-9])'+re.escape(bundle['ticker'])+r'(?![A-Z0-9])',title,re.I) and name.casefold() not in title.casefold():continue
+        from company_identity import headline_matches
+        from urllib.parse import urlparse
+        issuer=(urlparse(company.get('website') or '').hostname or '').removeprefix('www.')
+        host=(urlparse(item.get('url') or '').hostname or '').removeprefix('www.')
+        official=bool(issuer and item.get('company_confirmed') and (host==issuer or host.endswith('.'+issuer)))
+        if not official and not headline_matches(title,bundle['ticker'],name,company.get('company_short_name')):continue
         words=title.split();item['title']=' '.join(words[:25])+('…' if len(words)>25 else '');item.pop('summary',None)
         item.setdefault('event_date',None);item.setdefault('verification','Báo chí đã kiểm tra ngày/danh tính; diễn biến chưa xác minh độc lập.')
         item.setdefault('impact','Chưa rõ');item.setdefault('channel','Giá và kỳ vọng thị trường' if re.search(r'giảm|tăng|giá|phiên|vốn hóa',title,re.I) else 'Sự kiện doanh nghiệp')
@@ -127,4 +133,6 @@ def enrich(bundle):
         'horizon_note':'Điểm X10 20% FA / 80% TA thiên về ngắn hạn; 50/50 và 80/20 chỉ kiểm tra độ nhạy, không tự đổi khuyến nghị.'}
     from thesis import build
     bundle['research']['thesis']=build(bundle)
+    from data_status import build as status_build
+    bundle['data_status']=status_build(bundle)
     return clean(bundle)
