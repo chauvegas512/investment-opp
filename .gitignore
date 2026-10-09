@@ -1,0 +1,15 @@
+**/.env
+**/.env.*
+**/.venv/
+**/__pycache__/
+**/*.pyc
+**/.agents/
+**/.codex/
+**/AGENTS.md
+**/*.log
+stocklens/data/
+stocklens/tmp/
+stocklens/output/*.zip
+**/*.sqlite
+**/*.sqlite-*
+**/*.db

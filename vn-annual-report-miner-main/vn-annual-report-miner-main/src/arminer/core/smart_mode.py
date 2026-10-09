@@ -1,0 +1,1158 @@
+# -*- coding: utf-8 -*-
+"""
+arminer.core.smart_mode
+=========================
+Flexible Input + Comprehensive Output.
+
+Nhà nghiên cứu KIỂM SOÁT — nhưng input cực dễ, output cực đầy đủ.
+
+Input từ khóa có thể là:
+  - File .txt (1 keyword/dòng)
+  - File .csv / .xlsx (cột keyword, category, variants)
+  - File .yaml (power users)
+  - List Python: ["blockchain", "smart contract"]
+  - String phân tách: "blockchain, smart contract, DeFi"
+  - CLI inline: --keywords "blockchain, smart contract"
+
+Tool tự xử lý: detect format, parse, normalize, sinh tất cả biến chuẩn.
+"""
+
+from __future__ import annotations
+
+import csv
+import math
+import re
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Union
+
+import pandas as pd
+from loguru import logger
+
+
+# =====================================================================
+# FlexibleDictionary — Nhận input KIỂU GÌ CŨNG ĐƯỢC
+# =====================================================================
+
+class FlexibleDictionary:
+    """
+    Bộ từ điển linh hoạt — nhận input bằng MỌI CÁCH.
+
+    Ví dụ::
+
+        # Cách 1: Từ file text (1 keyword/dòng)
+        d = FlexibleDictionary.load("keywords.txt")
+
+        # Cách 2: Từ CSV/Excel
+        d = FlexibleDictionary.load("keywords.csv")
+        d = FlexibleDictionary.load("keywords.xlsx")
+
+        # Cách 3: Từ YAML (power users)
+        d = FlexibleDictionary.load("dictionary.yaml")
+
+        # Cách 4: Từ list Python
+        d = FlexibleDictionary.from_list(["blockchain", "smart contract", "DeFi"])
+
+        # Cách 5: Từ string
+        d = FlexibleDictionary.from_string("blockchain, smart contract, DeFi")
+
+        # Cách 6: Từ dict Python
+        d = FlexibleDictionary.from_dict({
+            "core": ["blockchain", "smart contract"],
+            "finance": ["cryptocurrency", "bitcoin"],
+        })
+
+    Tất cả đều cho ra cùng 1 Dictionary object chuẩn.
+    """
+
+    @staticmethod
+    def load(source: Union[str, Path, list, dict]) -> "FlexibleDictionary":
+        """
+        Auto-detect và load từ BẤT KỲ nguồn nào.
+
+        Args:
+            source: filepath (.txt/.csv/.xlsx/.yaml/.json), list, dict, hoặc string
+
+        Returns:
+            Dictionary object sẵn sàng sử dụng
+        """
+        # List → from_list
+        if isinstance(source, (list, tuple)):
+            return FlexibleDictionary.from_list(source)
+
+        # Dict → from_dict
+        if isinstance(source, dict):
+            return FlexibleDictionary.from_dict(source)
+
+        source = str(source)
+
+        # Nếu là string chứa dấu phẩy và không phải filepath → from_string
+        if "," in source and not Path(source).suffix:
+            return FlexibleDictionary.from_string(source)
+
+        # File path → detect by extension
+        path = Path(source)
+        if not path.exists():
+            # Có thể là string keywords
+            return FlexibleDictionary.from_string(source)
+
+        ext = path.suffix.lower()
+        if ext == ".txt":
+            return FlexibleDictionary._from_txt(path)
+        elif ext == ".csv":
+            return FlexibleDictionary._from_csv(path)
+        elif ext in (".xlsx", ".xls"):
+            return FlexibleDictionary._from_excel(path)
+        elif ext in (".yaml", ".yml"):
+            return FlexibleDictionary._from_yaml(path)
+        elif ext == ".json":
+            return FlexibleDictionary._from_yaml(path)  # same schema
+        else:
+            # Try as text file
+            return FlexibleDictionary._from_txt(path)
+
+    # -----------------------------------------------------------------
+    # Factory methods
+    # -----------------------------------------------------------------
+
+    @staticmethod
+    def from_list(keywords: List[str], category: str = "default") -> "FlexibleDictionary":
+        """
+        Từ list đơn giản::
+
+            ["blockchain", "smart contract", "DeFi"]
+        """
+        d = FlexibleDictionary()
+        d.name = "Custom Dictionary"
+        for kw in keywords:
+            kw = kw.strip()
+            if kw:
+                d._add(kw, category=category)
+        logger.info(f"Loaded {len(d.entries)} keywords from list")
+        return d
+
+    @staticmethod
+    def from_string(text: str) -> "FlexibleDictionary":
+        """
+        Từ string phân tách bằng dấu phẩy hoặc xuống dòng::
+
+            "blockchain, smart contract, DeFi"
+        """
+        # Split by comma, semicolon, or newline
+        parts = re.split(r"[,;\n]+", text)
+        keywords = [p.strip() for p in parts if p.strip()]
+        return FlexibleDictionary.from_list(keywords)
+
+    @staticmethod
+    def from_dict(data: Dict[str, List[str]]) -> "FlexibleDictionary":
+        """
+        Từ dict phân nhóm::
+
+            {
+                "core": ["blockchain", "distributed ledger"],
+                "finance": ["cryptocurrency", "bitcoin"],
+            }
+        """
+        d = FlexibleDictionary()
+        d.name = "Custom Dictionary"
+        for category, keywords in data.items():
+            for kw in keywords:
+                kw = kw.strip()
+                if kw:
+                    d._add(kw, category=category)
+        logger.info(
+            f"Loaded {len(d.entries)} keywords in "
+            f"{len(d.categories)} categories from dict"
+        )
+        return d
+
+    @staticmethod
+    def _from_txt(path: Path) -> "FlexibleDictionary":
+        """
+        File text — format cực đơn giản:
+
+        Cách 1 — Flat (1 keyword/dòng)::
+
+            blockchain
+            smart contract
+            cryptocurrency
+
+        Cách 2 — Có category (dùng [Header])::
+
+            [Core]
+            blockchain
+            distributed ledger
+            smart contract
+
+            [Finance]
+            cryptocurrency
+            bitcoin
+            DeFi
+        """
+        d = FlexibleDictionary()
+        d.name = path.stem.replace("_", " ").title()
+
+        text = path.read_text(encoding="utf-8-sig")
+        lines = text.strip().split("\n")
+
+        current_cat = "default"
+        for line in lines:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+
+            # Check for category header: [Category] or ## Category
+            header_match = re.match(r"^\[(.+)\]$|^#{1,3}\s+(.+)$", line)
+            if header_match:
+                current_cat = (header_match.group(1) or header_match.group(2)).strip().lower()
+                continue
+
+            # Keyword line — có thể có variants sau dấu | hoặc tab
+            parts = re.split(r"\t+|\s*\|\s*", line, maxsplit=1)
+            keyword = parts[0].strip()
+            variants = parts[1].strip() if len(parts) > 1 else None
+
+            if keyword:
+                d._add(keyword, category=current_cat, variants=variants)
+
+        logger.info(
+            f"Loaded {len(d.entries)} keywords from {path.name} "
+            f"({len(d.categories)} categories)"
+        )
+        return d
+
+    @staticmethod
+    def _from_csv(path: Path) -> "FlexibleDictionary":
+        """
+        File CSV — tự detect cột:
+
+        Tối thiểu chỉ cần 1 cột 'keyword'::
+
+            keyword
+            blockchain
+            smart contract
+
+        Đầy đủ::
+
+            keyword,category,variants,language
+            blockchain,core,block chain|block-chain,en
+            chuỗi khối,core,chuoi khoi,vi
+        """
+        d = FlexibleDictionary()
+        d.name = path.stem.replace("_", " ").title()
+
+        with open(path, "r", encoding="utf-8-sig") as f:
+            # Detect delimiter
+            sample = f.read(4096)
+            f.seek(0)
+
+            if "\t" in sample and "," not in sample:
+                dialect = csv.excel_tab
+            else:
+                try:
+                    dialect = csv.Sniffer().sniff(sample)
+                except csv.Error:
+                    dialect = csv.excel
+
+            reader = csv.DictReader(f, dialect=dialect)
+            headers = [h.lower().strip() for h in (reader.fieldnames or [])]
+
+            # Auto-detect column mapping
+            kw_col = _find_col(headers, ["keyword", "keywords", "term", "terms",
+                                          "word", "words", "từ khóa", "tu khoa"])
+            cat_col = _find_col(headers, ["category", "categories", "group", "functional_group",
+                                           "functional group", "nhóm", "nhom", "cat"])
+            var_col = _find_col(headers, ["variants", "variant", "keyword_variants", "synonyms",
+                                           "biến thể", "bien the", "alias"])
+            lang_col = _find_col(headers, ["language", "lang", "ngôn ngữ"])
+            amb_col = _find_col(headers, ["is_ambiguous", "ambiguous", "đa nghĩa", "da nghia"])
+            act_col = _find_col(headers, ["is_active", "active", "hoạt động", "hoat dong"])
+
+            if not kw_col:
+                # Không có header → assume cột đầu tiên là keyword
+                f.seek(0)
+                for line in f:
+                    keyword = line.strip().split(",")[0].strip().strip('"')
+                    if keyword and keyword.lower() not in ("keyword", "term"):
+                        d._add(keyword)
+            else:
+                for row in reader:
+                    keyword = row.get(kw_col, "").strip()
+                    if not keyword:
+                        continue
+
+                    # Filter inactive
+                    if act_col:
+                        act_val = str(row.get(act_col, "1")).strip().lower()
+                        if act_val in ("0", "false", "no", "inactive"):
+                            continue
+
+                    raw_cat = row.get(cat_col, "").strip().lower() if cat_col else ""
+                    category = raw_cat if raw_cat else "default"
+                    variants = row.get(var_col, "").strip() if var_col else None
+                    language = row.get(lang_col, "en").strip() if lang_col else "en"
+
+                    # Parse ambiguity
+                    is_amb = False
+                    if amb_col:
+                        amb_val = str(row.get(amb_col, "0")).strip().lower()
+                        is_amb = amb_val in ("1", "true", "yes")
+
+                    d._add(keyword, category=category, variants=variants,
+                           language=language, is_ambiguous=is_amb)
+
+        logger.info(f"Loaded {len(d.entries)} keywords from CSV: {path.name}")
+        return d
+
+    @staticmethod
+    def _from_excel(path: Path) -> "FlexibleDictionary":
+        """File Excel — cùng logic với CSV."""
+        try:
+            df = pd.read_excel(path, engine="openpyxl")
+        except ImportError:
+            raise ImportError("openpyxl needed for Excel. Run: pip install openpyxl")
+
+        d = FlexibleDictionary()
+        d.name = path.stem.replace("_", " ").title()
+
+        cols = [c.lower().strip() for c in df.columns]
+        kw_idx = _find_col_idx(cols, ["keyword", "keywords", "term", "từ khóa"])
+        cat_idx = _find_col_idx(cols, ["category", "nhóm", "group", "functional_group"])
+        var_idx = _find_col_idx(cols, ["variants", "biến thể", "keyword_variants", "synonyms"])
+        amb_idx = _find_col_idx(cols, ["is_ambiguous", "ambiguous", "đa nghĩa"])
+        act_idx = _find_col_idx(cols, ["is_active", "active", "hoạt động"])
+
+        kw_col = df.columns[kw_idx] if kw_idx is not None else df.columns[0]
+        cat_col = df.columns[cat_idx] if cat_idx is not None else None
+        var_col = df.columns[var_idx] if var_idx is not None else None
+        amb_col = df.columns[amb_idx] if amb_idx is not None else None
+        act_col = df.columns[act_idx] if act_idx is not None else None
+
+        for _, row in df.iterrows():
+            keyword = str(row[kw_col]).strip()
+            if not keyword or keyword == "nan":
+                continue
+
+            if act_col is not None:
+                act_val = str(row[act_col]).strip().lower()
+                if act_val in ("0", "false", "no", "inactive"):
+                    continue
+
+            category = str(row[cat_col]).strip().lower() if cat_col is not None and pd.notna(row[cat_col]) else "default"
+            variants = str(row[var_col]).strip() if var_col is not None and pd.notna(row[var_col]) else None
+            is_amb = False
+            if amb_col is not None and pd.notna(row[amb_col]):
+                is_amb = str(row[amb_col]).strip().lower() in ("1", "true", "yes")
+
+            d._add(keyword, category=category, variants=variants, is_ambiguous=is_amb)
+
+        logger.info(f"Loaded {len(d.entries)} keywords from Excel: {path.name}")
+        return d
+
+    @staticmethod
+    def _from_yaml(path: Path) -> "FlexibleDictionary":
+        """Delegate to existing Dictionary.from_yaml."""
+        from arminer.core.dictionary import Dictionary
+        core_dict = Dictionary.from_yaml(path)
+
+        d = FlexibleDictionary()
+        d.name = core_dict.name
+        d._core_dict = core_dict
+        d.entries = []
+        d._categories = set()
+
+        for cat_name, cat in core_dict.categories.items():
+            d._categories.add(cat_name)
+            for entry in cat.keywords:
+                d.entries.append({
+                    "keyword": entry.keyword,
+                    "category": cat_name,
+                    "variants": entry.variants,
+                    "language": entry.language,
+                    "weight": entry.weight,
+                    "is_ambiguous": entry.is_ambiguous,
+                })
+
+        d._classification_rules = core_dict.classification_rules
+        d._exclusions = [e["keyword"].lower() for e in core_dict.exclusions]
+        return d
+
+    # -----------------------------------------------------------------
+    # Internal
+    # -----------------------------------------------------------------
+
+    def __init__(self):
+        self.name = "Dictionary"
+        self.entries: List[Dict[str, Any]] = []
+        self._categories: set = set()
+        self._core_dict = None
+        self._classification_rules: Dict = {}
+        self._exclusions: List[str] = []
+
+    def _add(self, keyword: str, category: str = "default",
+             variants: Optional[str] = None, language: str = "en",
+             weight: float = 1.0, is_ambiguous: bool = False):
+        keyword = keyword.strip()
+        if not keyword:
+            return
+        self._categories.add(category)
+        self.entries.append({
+            "keyword": keyword,
+            "category": category,
+            "variants": variants,
+            "language": language,
+            "weight": weight,
+            "is_ambiguous": is_ambiguous,
+        })
+
+    @property
+    def categories(self) -> List[str]:
+        return sorted(self._categories)
+
+    @property
+    def classification_rules(self) -> Dict:
+        return self._classification_rules
+
+    @property
+    def exclusions(self) -> List[str]:
+        return self._exclusions
+
+    def to_core_dictionary(self):
+        """Convert to core Dictionary object for matcher."""
+        if self._core_dict:
+            return self._core_dict
+
+        from arminer.core.dictionary import Dictionary, Category, KeywordEntry
+
+        d = Dictionary(name=self.name)
+        d.classification_rules = self._classification_rules
+        d.exclusions = [{"keyword": k} for k in self._exclusions]
+
+        for entry in self.entries:
+            cat_name = entry["category"]
+            if cat_name not in d.categories:
+                d.categories[cat_name] = Category(name=cat_name)
+
+            kw_entry = KeywordEntry(
+                keyword=entry["keyword"],
+                variants=entry.get("variants"),
+                language=entry.get("language", "en"),
+                weight=entry.get("weight", 1.0),
+                is_ambiguous=entry.get("is_ambiguous", False),
+            )
+            d.categories[cat_name].add_keyword(kw_entry)
+
+        return d
+
+    def get_flat_list(self) -> List[str]:
+        """All keywords + variants, flattened."""
+        result = set()
+        for entry in self.entries:
+            kw = entry["keyword"]
+            if kw not in self._exclusions:
+                result.add(kw)
+                if entry.get("variants"):
+                    for v in entry["variants"].split("|"):
+                        v = v.strip().lower()
+                        if v and v not in self._exclusions:
+                            result.add(v)
+        return sorted(result)
+
+    def stats(self) -> Dict:
+        """Thống kê."""
+        by_cat = {}
+        for e in self.entries:
+            cat = e["category"]
+            by_cat[cat] = by_cat.get(cat, 0) + 1
+
+        return {
+            "name": self.name,
+            "total_keywords": len(self.entries),
+            "total_with_variants": len(self.get_flat_list()),
+            "categories": by_cat,
+            "exclusions": len(self._exclusions),
+        }
+
+    def __repr__(self):
+        return f"FlexibleDictionary({self.name!r}, {len(self.entries)} keywords)"
+    
+    def __len__(self):
+        return len(self.entries)
+
+
+# =====================================================================
+# SmartVariableCalculator — Tự sinh TẤT CẢ biến chuẩn
+# =====================================================================
+
+class SmartVariableCalculator:
+    """
+    Tính biến nghiên cứu chuẩn quốc tế cho textual analysis.
+
+    Output 6 biến chuẩn (dựa trên Wu et al. 2021, Baier et al. 2020,
+    Fang et al. 2024, PLOS ONE, Emerald, BJM):
+
+    - Frequency:        Σ keyword occurrences (raw count)
+    - Log_Frequency:    ln(1 + Frequency)  ← BIẾN CHÍNH cho regression
+    - Mention:          1 nếu Frequency > 0, else 0
+    - Substantive:      1 nếu Frequency > 2, else 0 (BJM biodiversity)
+    - Density:          Frequency / Word_Count × 100 (%)
+    - Coverage:         Unique Keywords Used / Total Dict Keywords
+
+    + Per-category _Freq breakdown (Fang et al. 2024)
+    """
+
+    def calculate_all(
+        self,
+        matches: List[Dict],
+        total_words: int,
+        category_names: List[str],
+        topic_prefix: str = "topic",
+        total_dict_keywords: int = 0,
+        classification_rules: Optional[Dict] = None,
+    ) -> Dict[str, Any]:
+        """Tính TẤT CẢ biến cho 1 báo cáo → 1 dòng panel."""
+        p = topic_prefix.lower()
+        result: Dict[str, Any] = {}
+
+        freq = len(matches)
+        unique_kws = set(
+            m.get("keyword_canonical", m.get("keyword_found", ""))
+            for m in matches
+        )
+
+        # === 5 biến mining cốt lõi chuẩn học thuật & Stata (Số Từ, Frequency, Log, Mention, Density) ===
+        result["Word_Count"] = total_words
+        result["Frequency"] = freq
+        result["Log_Frequency"] = round(math.log(1 + freq), 6)
+        result["Mention"] = 1 if freq > 0 else 0
+        result["Density"] = (
+            round((freq / total_words) * 100, 4)
+            if total_words > 0 else 0.0
+        )
+        result["Unique_Keywords"] = len(unique_kws)
+
+        # === Per-category frequency only (Fang et al. 2024) ===
+        for cat in category_names:
+            cat_matches = [m for m in matches if m.get("category") == cat]
+            cc = cat.lower().replace(" ", "_")
+            pref = f"{p}_" if (p and p not in ("topic", "default")) else ""
+            result[f"{pref}{cc}_Freq"] = len(cat_matches)
+
+        return result
+
+
+# =====================================================================
+# Stata & Codebook Helpers
+# =====================================================================
+
+def sanitize_stata_dataframe(df: pd.DataFrame) -> Tuple[pd.DataFrame, Dict[str, str]]:
+    """Làm sạch DataFrame để xuất Stata .dta an toàn, không trùng lặp cột.
+
+    Quy tắc Stata 118:
+    - Tên biến tối đa 32 ký tự, chỉ gồm [a-zA-Z0-9_], bắt đầu bằng chữ cái hoặc gạch dưới.
+    - Tuyệt đối không trùng lặp tên biến (tự động thêm hậu tố _1, _2 nếu trùng sau khi cắt ngắn).
+    - Lưu giữ toàn bộ tên gốc đầy đủ trong Stata variable_labels (lên đến 80 ký tự).
+    - Chuẩn hóa kiểu dữ liệu dạng chuỗi để tránh lỗi kiểu dữ liệu hỗn hợp.
+    """
+    sdf = df.copy()
+    seen = set()
+    new_cols = []
+    labels = {}
+
+    for col in sdf.columns:
+        col_str = str(col).strip()
+        # Chuyển ký tự không hợp lệ thành gạch dưới
+        clean = re.sub(r"[^a-zA-Z0-9_]", "_", col_str)
+        if not clean or clean[0].isdigit():
+            clean = "_" + clean
+        clean = clean[:32]
+        base = clean[:28]
+        candidate = clean
+        counter = 1
+        while candidate.lower() in seen:
+            candidate = f"{base}_{counter}"[:32]
+            counter += 1
+        seen.add(candidate.lower())
+        new_cols.append(candidate)
+        labels[candidate] = col_str[:80]
+
+    sdf.columns = new_cols
+
+    # Xử lý các cột dạng chuỗi / object
+    for c in sdf.columns:
+        if sdf[c].dtype == "object":
+            sdf[c] = sdf[c].fillna("").astype(str)
+
+    return sdf, labels
+
+
+def auto_generate_codebook(df: pd.DataFrame) -> List[Dict[str, str]]:
+    """Tự động sinh bảng giải thích biến (Codebook) chuẩn bài báo nghiên cứu."""
+    codebook = []
+    for col in df.columns:
+        c_lower = col.lower()
+        if c_lower == "ticker":
+            desc = "Mã chứng khoán niêm yết (HOSE, HNX, UPCoM)"
+            vtype = "Mã định danh (Identifier)"
+            formula = "Mã cổ phiếu chuẩn 3 chữ cái"
+            ref = ""
+        elif c_lower == "year":
+            desc = "Năm công bố báo cáo thường niên / tài chính"
+            vtype = "Biến thời gian (Time ID)"
+            formula = "Năm dương lịch (YYYY)"
+            ref = ""
+        elif c_lower == "icb_level1":
+            desc = "Ngành cấp 1 theo chuẩn phân ngành ICB"
+            vtype = "Biến phân loại (Categorical)"
+            formula = "10 ngành cấp 1 (Tài chính, Công nghệ, Bất động sản...)"
+            ref = ""
+        elif c_lower == "icb_level2":
+            desc = "Ngành cấp 2 theo chuẩn phân ngành ICB"
+            vtype = "Biến phân loại (Categorical)"
+            formula = "Ngành chi tiết cấp 2"
+            ref = ""
+        elif c_lower == "file":
+            desc = "Tên tệp tin báo cáo thường niên gốc"
+            vtype = "Thông tin tệp (Metadata)"
+            formula = "Tên file PDF/TXT phân tích"
+            ref = ""
+        elif c_lower == "pages":
+            desc = "Độ dài báo cáo thường niên (tổng số trang)"
+            vtype = "Định lượng (Continuous)"
+            formula = "Tổng số trang của file PDF"
+            ref = ""
+        elif c_lower == "word_count":
+            desc = "Số Từ — Tổng số từ trong toàn văn báo cáo thường niên (Word Count)"
+            vtype = "Định lượng (Continuous)"
+            formula = "Tổng số từ trích xuất sau khi làm sạch văn bản"
+            ref = ""
+        # === 5 biến mining cốt lõi chuẩn quốc tế ===
+        elif c_lower == "frequency" or (c_lower.endswith("_frequency") and not c_lower.endswith("_log_frequency")):
+            topic = col.rsplit("_", 1)[0] if "_" in col else "từ khóa"
+            desc = f"Frequency — Tổng tần suất xuất hiện các từ khóa liên quan đến {topic}"
+            vtype = "Đếm số lần (Count)"
+            formula = "Σ keyword occurrences"
+            ref = "Wu et al. (2021)"
+        elif c_lower in ("log_frequency", "log_freq", "log_main") or c_lower.endswith("_log_frequency"):
+            topic = col.rsplit("_", 2)[0] if "_" in col else "từ khóa"
+            desc = f"Log (Main) — Chỉ số công bố thông tin chủ đề {topic} (Biến độc lập chính)"
+            vtype = "Biến logarit liên tục (Continuous Log) — BIẾN CHÍNH"
+            formula = "ln(1 + Frequency)"
+            ref = "Wu et al. (2021), MDPI (2026), Springer (2026 VN)"
+        elif c_lower == "mention" or c_lower.endswith("_mention"):
+            topic = col.rsplit("_", 1)[0] if "_" in col else "từ khóa"
+            desc = f"Mention — Biến giả nhận diện có công bố thông tin về {topic} (0/1)"
+            vtype = "Biến giả (Dummy 0/1) — Robustness"
+            formula = "1 nếu Frequency > 0, ngược lại bằng 0"
+            ref = "Baier et al. (2020)"
+        elif c_lower == "density" or c_lower.endswith("_density"):
+            topic = col.rsplit("_", 1)[0] if "_" in col else "từ khóa"
+            desc = f"Density (%) — Mật độ từ khóa chủ đề {topic} trên tổng số từ báo cáo"
+            vtype = "Tỷ lệ liên tục (%) — Robustness"
+            formula = "(Frequency / Word_Count) × 100"
+            ref = "PLOS ONE (2022), Emerald, Wiley (2025)"
+        elif c_lower == "substantive" or c_lower.endswith("_substantive"):
+            topic = col.rsplit("_", 1)[0] if "_" in col else "từ khóa"
+            desc = f"Substantive — Biến giả công bố thực chất (Substantive Disclosure) về {topic}"
+            vtype = "Biến giả (Dummy 0/1) — Robustness"
+            formula = "1 nếu Frequency > 2, ngược lại bằng 0"
+            ref = "British Journal of Management (2025)"
+        elif c_lower == "unique_keywords" or c_lower.endswith("_unique_keywords"):
+            topic = col.rsplit("_", 2)[0] if "_" in col else "từ khóa"
+            desc = f"Unique_Keywords — Số từ khóa phân biệt (distinct) xuất hiện cho {topic}"
+            vtype = "Đếm số lượng (Count)"
+            formula = "Số lượng từ khóa khác nhau xuất hiện ít nhất 1 lần"
+            ref = ""
+        elif c_lower == "coverage" or c_lower.endswith("_coverage"):
+            topic = col.rsplit("_", 1)[0] if "_" in col else "từ khóa"
+            desc = f"Coverage — Phạm vi sử dụng từ vựng chủ đề {topic} (Keyword Coverage)"
+            vtype = "Tỷ lệ [0,1] — Robustness bổ sung"
+            formula = "Unique Keywords Used / Total Dictionary Keywords"
+            ref = ""
+        elif c_lower.endswith("_freq"):
+            desc = f"Tần suất từ khóa theo nhóm danh mục {col}"
+            vtype = "Đếm số lần (Count)"
+            formula = "Σ keyword occurrences trong nhóm category"
+            ref = "Fang et al. (2024)"
+        # === Labor / Human Capital variables ===
+        elif c_lower == "labor":
+            desc = "Tổng số lao động của doanh nghiệp tại ngày kết thúc năm tài chính (31/12)"
+            vtype = "Biến quy mô lao động (Headcount / Labor)"
+            formula = "Trích xuất từ Báo cáo thường niên (BCTN) / Thuyết minh BCTC"
+            ref = "Thông tư 96/2020/TT-BTC, chuẩn mực công bố BCTN"
+        elif c_lower == "labor_page":
+            desc = "Số trang trong báo cáo phát hiện số lượng lao động"
+            vtype = "Trường kiểm chứng (Audit Page)"
+            formula = "Page index trong file PDF BCTN"
+            ref = ""
+        elif c_lower == "labor_confidence":
+            desc = "Độ tin cậy của thuật toán trích xuất biến Labor (0.00 - 1.00)"
+            vtype = "Chỉ số tin cậy (Confidence Score)"
+            formula = "Đánh giá đa tầng: câu văn khẳng định, bảng đối chiếu nhiều năm, thuyết minh BCTC"
+            ref = ""
+        # === Financial ratios ===
+        elif c_lower == "roa":
+            desc = "Tỷ suất sinh lời trên tổng tài sản (Return on Assets)"
+            vtype = "Tỷ số tài chính (Financial Ratio)"
+            formula = "Lợi nhuận sau thuế / Tổng tài sản"
+            ref = ""
+        elif c_lower == "roe":
+            desc = "Tỷ suất sinh lời trên vốn chủ sở hữu (Return on Equity)"
+            vtype = "Tỷ số tài chính (Financial Ratio)"
+            formula = "Lợi nhuận sau thuế / Vốn chủ sở hữu"
+            ref = ""
+        elif c_lower == "size":
+            desc = "Quy mô doanh nghiệp (Firm Size)"
+            vtype = "Biến kiểm soát (Control Variable)"
+            formula = "ln(Tổng tài sản)"
+            ref = ""
+        elif c_lower == "leverage":
+            desc = "Hệ số đòn bẩy tài chính (Financial Leverage)"
+            vtype = "Biến kiểm soát (Control Variable)"
+            formula = "Nợ phải trả / Tổng tài sản"
+            ref = ""
+        elif c_lower in ("gross_margin", "net_margin", "ebit_margin",
+                         "current_ratio", "quick_ratio", "debt_to_equity",
+                         "equity_multiplier", "asset_turnover"):
+            desc = f"Chỉ số tài chính: {col.replace('_', ' ').title()}"
+            vtype = "Tỷ số tài chính (Financial Ratio)"
+            formula = "Xem vnfinancialdata"
+            ref = ""
+        elif c_lower.startswith(("bs_", "is_", "cf_")):
+            prefix_map = {"bs_": "Bảng cân đối kế toán",
+                          "is_": "Kết quả hoạt động kinh doanh",
+                          "cf_": "Lưu chuyển tiền tệ"}
+            pfx = c_lower[:3]
+            desc = f"Chỉ tiêu {prefix_map.get(pfx, 'BCTC')}: {col}"
+            vtype = "Chỉ tiêu kế toán (VNĐ)"
+            formula = "Báo cáo tài chính từ vnfinancialdata"
+            ref = ""
+        else:
+            desc = f"Biến nghiên cứu: {col}"
+            vtype = "Biến số (Variable)"
+            formula = "Trích xuất từ báo cáo"
+            ref = ""
+
+        entry = {
+            "Biến": col,
+            "Phân loại": vtype,
+            "Mô tả chi tiết": desc,
+            "Công thức / Nguồn": formula,
+        }
+        if ref:
+            entry["Tham chiếu"] = ref
+        codebook.append(entry)
+    return codebook
+
+
+# =====================================================================
+# Academic Descriptive Statistics & Correlation Matrix Generators
+# =====================================================================
+
+def select_research_variables(
+    df: pd.DataFrame, 
+    require_variance: bool = False
+) -> List[str]:
+    """
+    Chọn lọc các biến nghiên cứu thực chất cho Descriptive_Stats và Correlation.
+    Ưu tiên 5 biến mining cốt lõi: Word_Count, Frequency, Log_Frequency, Mention, Density...
+    Loại bỏ biến hành chính (year, pages, stt, id) và các biến sub-category (_Freq).
+    """
+    ignored_names = {
+        "year", "nam", "pages", "page", "stt", "id", "index", 
+        "unnamed: 0", "article_id", "file_id", "source_id", "date", "time", "quarter", "quy", "url"
+    }
+    priority_metrics = [
+        "Word_Count", "Frequency", "Log_Frequency", "Mention", "Density",
+        "Substantive", "Unique_Keywords", "Coverage"
+    ]
+    num_df = df.select_dtypes(include=["number"])
+    valid_cols = []
+    
+    # 1. Ưu tiên đưa các biến mining cốt lõi vào trước theo đúng thứ tự
+    for pm in priority_metrics:
+        target_col = None
+        if pm in num_df.columns:
+            target_col = pm
+        else:
+            for c in num_df.columns:
+                c_low = c.lower()
+                if (c_low == pm.lower() or c_low.endswith(f"_{pm.lower()}")) and not c_low.endswith(f"_log_{pm.lower()}"):
+                    target_col = c
+                    break
+        if target_col and target_col not in valid_cols:
+            series = num_df[target_col].dropna()
+            if len(series) > 0:
+                if require_variance:
+                    if len(series) >= 2 and float(series.std()) > 0:
+                        valid_cols.append(target_col)
+                else:
+                    valid_cols.append(target_col)
+
+    # 2. Bổ sung các biến kiểm soát tài chính (ROA, ROE, Size, Leverage...)
+    for col in num_df.columns:
+        if col in valid_cols:
+            continue
+        cl = str(col).lower().strip()
+        if cl in ignored_names:
+            continue
+        if cl.startswith(("year_", "ind_", "fe_", "firm_", "sec_", "dummy_")):
+            continue
+        # Bỏ các biến sub-category _Freq để không làm loãng bảng thống kê
+        if cl.endswith("_freq") or "_freq_" in cl:
+            continue
+        if any(cl.endswith(f"_{pm.lower()}") for pm in priority_metrics):
+            continue
+
+        series = num_df[col].dropna()
+        if len(series) == 0:
+            continue
+        if require_variance:
+            if len(series) < 2 or float(series.std()) == 0.0:
+                continue
+        valid_cols.append(col)
+        
+    return valid_cols
+
+
+def build_descriptive_stats_table(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Xây dựng bảng Thống kê mô tả chuẩn học thuật (Academic Summary Statistics).
+    
+    Chỉ giữ lại 6 chỉ số cốt lõi chuẩn bài báo quốc tế (Table 1 trong các tạp chí Q1/Q2):
+    [Variable, N, Mean, Std Dev, Min, Median, Max]
+    
+    Loại bỏ:
+    - Biến hành chính/thời gian: year, pages, stt, id,...
+    - Chỉ số thừa: 25%, 75% (phân vị thừa gây rối bảng), missing (thừa)
+    """
+    cols = select_research_variables(df, require_variance=False)
+    if not cols:
+        return pd.DataFrame(columns=["Variable", "N", "Mean", "Std Dev", "Min", "Median", "Max"])
+    
+    sub = df[cols]
+    desc = sub.describe().T
+    desc["N"] = sub.count().astype(int)
+    desc.index.name = "Variable"
+    
+    rename_map = {
+        "mean": "Mean",
+        "std": "Std Dev",
+        "min": "Min",
+        "50%": "Median",
+        "max": "Max"
+    }
+    desc = desc.rename(columns=rename_map)
+    stat_cols = [c for c in ["N", "Mean", "Std Dev", "Min", "Median", "Max"] if c in desc.columns]
+    desc_df = desc[stat_cols].round(4).reset_index()
+    if "N" in desc_df.columns:
+        desc_df["N"] = desc_df["N"].astype(int)
+    return desc_df
+
+
+def build_correlation_matrix(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Xây dựng Ma trận tương quan Pearson chuẩn học thuật.
+    
+    - Chỉ giữ các biến nghiên cứu thực chất có phương sai > 0 (std > 0)
+    - Loại bỏ triệt để biến year, pages, stt và các biến có std == 0 để tránh phát sinh giá trị NaN
+    - Làm tròn 4 chữ số thập phân chuẩn xác, đường chéo chính bằng 1.0000
+    - Cột đầu tiên đặt tên rõ ràng là 'Variable'
+    """
+    cols = select_research_variables(df, require_variance=True)
+    sub_df = df[cols]
+    if not isinstance(sub_df, pd.DataFrame):
+        sub_df = sub_df.to_frame()
+    if len(cols) < 2:
+        if len(cols) == 1:
+            corr_df = sub_df.corr().round(4).reset_index()
+            corr_df.rename(columns={"index": "Variable"}, inplace=True)
+            return corr_df
+        return pd.DataFrame(columns=list(["Variable"]))
+        
+    corr_df = sub_df.corr(method="pearson").round(4).reset_index()
+    corr_df.rename(columns={"index": "Variable"}, inplace=True)
+    return corr_df
+
+
+# =====================================================================
+# Company Info Sheet Helper
+# =====================================================================
+
+def load_company_info_df(tickers: Optional[List[str]] = None) -> Optional[pd.DataFrame]:
+    """Load danh_sach_doanh_nghiep_niem_yet.csv (bỏ cột cuối: Cổng thông tin IR) để dùng làm sheet Company_Info.
+    
+    Args:
+        tickers: Danh sách mã CK cần lọc. Nếu None thì trả về toàn bộ.
+    """
+    possible_paths = [
+        Path(__file__).resolve().parent.parent / "data" / "fixtures" / "fiinpro_icb_companies.csv",
+        Path(__file__).resolve().parents[3] / "danh_sach_doanh_nghiep_niem_yet.csv",
+        Path(__file__).resolve().parents[3] / "src" / "arminer" / "data" / "fixtures" / "fiinpro_icb_companies.csv",
+    ]
+    for p in possible_paths:
+        if p.exists():
+            try:
+                df = pd.read_csv(p, encoding="utf-8-sig")
+                # Bỏ cột cuối cùng (Cổng thông tin IR / Quan hệ CĐ)
+                if len(df.columns) > 1:
+                    df = df.iloc[:, :-1]
+                # Lọc chỉ các cổ phiếu đang xử lý
+                if tickers:
+                    ticker_col = df.columns[0]  # "Mã CK"
+                    ticker_set = {t.upper().strip() for t in tickers}
+                    df = df[df[ticker_col].astype(str).str.upper().str.strip().isin(ticker_set)]
+                    df = df.reset_index(drop=True)
+                logger.info(f"Loaded Company_Info: {len(df)} doanh nghiệp từ {p.name}")
+                return df
+            except Exception as e:
+                logger.warning(f"Không đọc được file company info ({p.name}): {e}")
+    logger.debug("Không tìm thấy file danh sách doanh nghiệp niêm yết để tạo sheet Company_Info")
+    return None
+
+
+# =====================================================================
+# ResearchOutputGenerator
+# =====================================================================
+
+class ResearchOutputGenerator:
+    """Tự động sinh TOÀN BỘ output files chuẩn nghiên cứu định lượng."""
+
+    def __init__(self, output_dir: Path):
+        self.output_dir = output_dir
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+    def generate_all(
+        self,
+        panel_df: pd.DataFrame,
+        variable_info: Optional[List[Dict]] = None,
+        raw_keywords_df: Optional[pd.DataFrame] = None,
+        context_snippets_df: Optional[pd.DataFrame] = None,
+        labor_audit_df: Optional[pd.DataFrame] = None,
+    ) -> Dict[str, Path]:
+        outputs = {}
+
+        if variable_info is None:
+            variable_info = auto_generate_codebook(panel_df)
+
+        # Raw keywords CSV if available
+        if raw_keywords_df is not None and not raw_keywords_df.empty:
+            rk_csv = self.output_dir / "raw_keywords.csv"
+            raw_keywords_df.to_csv(rk_csv, index=False, encoding="utf-8-sig")
+            outputs["raw_keywords_csv"] = rk_csv
+
+        # Context snippets CSV if available
+        if context_snippets_df is not None and not context_snippets_df.empty:
+            ctx_csv = self.output_dir / "context_snippets.csv"
+            context_snippets_df.to_csv(ctx_csv, index=False, encoding="utf-8-sig")
+            outputs["context_snippets_csv"] = ctx_csv
+
+        # Labor audit CSV if available
+        if labor_audit_df is not None and not labor_audit_df.empty:
+            lab_csv = self.output_dir / "labor_audit.csv"
+            labor_audit_df.to_csv(lab_csv, index=False, encoding="utf-8-sig")
+            outputs["labor_audit_csv"] = lab_csv
+
+        # Panel data (Excel with all research sheets, CSV, Parquet, Stata)
+        for fmt in ("excel", "csv", "parquet", "stata"):
+            try:
+                outputs[f"panel_{fmt}"] = self._export(
+                    panel_df, fmt, variable_info, raw_keywords_df, context_snippets_df, labor_audit_df
+                )
+            except Exception as e:
+                logger.warning(f"Failed exporting format {fmt}: {e}")
+
+        # Descriptive statistics CSV
+        outputs["desc_stats"] = self._descriptive(panel_df)
+
+        # Correlation matrix CSV
+        outputs["correlation"] = self._correlation(panel_df)
+
+        # Variable codebook CSV
+        outputs["codebook"] = self._codebook(variable_info)
+
+        # Summary report
+        outputs["report"] = self._report(panel_df, outputs)
+
+        return outputs
+
+    def _export(
+        self,
+        df: pd.DataFrame,
+        fmt: str,
+        variable_info: Optional[List[Dict]] = None,
+        raw_keywords_df: Optional[pd.DataFrame] = None,
+        context_snippets_df: Optional[pd.DataFrame] = None,
+        labor_audit_df: Optional[pd.DataFrame] = None,
+    ) -> Path:
+        # Loại bỏ 2 cột company_name và exchange ở sheet Panel_Data theo yêu cầu người dùng
+        drop_cols = [
+            c for c in df.columns
+            if c.lower() in ("company_name", "companyname", "ten_cty", "exchange", "san_gd", "san_giao_dich")
+        ]
+        clean_base_df = df.drop(columns=drop_cols) if drop_cols else df
+
+        core_order = [
+            "ticker", "year", "icb_level1", "icb_level2", "file", "pages",
+            "Labor", "Labor_Page", "Labor_Confidence",
+            "Word_Count", "Frequency", "Log_Frequency", "Mention", "Density",
+            "Unique_Keywords",
+        ]
+        ordered_cols = [c for c in core_order if c in clean_base_df.columns]
+        extra_cols = [c for c in clean_base_df.columns if c not in ordered_cols]
+        export_df = clean_base_df[ordered_cols + extra_cols].copy()
+
+        # Đảm bảo cột pages/page là số nguyên (integer), không bị tự động thêm thập phân (90 không thành 90.00)
+        for page_col in ["pages", "page", "n_pages", "total_pages", "so_trang"]:
+            if page_col in export_df.columns:
+                export_df[page_col] = pd.to_numeric(export_df[page_col], errors="coerce").fillna(1).round().astype("int64")
+
+        p = self.output_dir / f"panel_data.{fmt if fmt in ('csv', 'parquet') else ('xlsx' if fmt == 'excel' else 'dta')}"
+        if fmt == "excel":
+            p = self.output_dir / "panel_data.xlsx"
+
+            # Sanitize dataframes to remove ALL illegal Excel characters (exact openpyxl regex)
+            import re
+            # This is the EXACT regex openpyxl uses internally (openpyxl.cell.cell.ILLEGAL_CHARACTERS_RE)
+            # Covers: C0/C1 control chars, surrogates, FFFE/FFFF, and more
+            illegal_chars_re = re.compile(
+                r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f'
+                r'\ud800-\udfff\ufdd0-\ufdef\ufffe\uffff]'
+            )
+            def sanitize(df_in):
+                if df_in is None or df_in.empty: return df_in
+                df_out = df_in.copy()
+                for col in df_out.select_dtypes(include=['object', 'string']).columns:
+                    df_out[col] = df_out[col].apply(lambda x: illegal_chars_re.sub('', x) if isinstance(x, str) else x)
+                # Also sanitize column names themselves
+                df_out.columns = [illegal_chars_re.sub('', str(c)) if isinstance(c, str) else c for c in df_out.columns]
+                return df_out
+
+            export_df_clean = sanitize(export_df)
+            context_clean = sanitize(context_snippets_df)
+            raw_clean = sanitize(raw_keywords_df)
+            labor_clean = sanitize(labor_audit_df)
+
+            with pd.ExcelWriter(p, engine="openpyxl") as writer:
+                # Sheet 1: Panel_Data (Main econometric panel regression variables)
+                export_df_clean.to_excel(writer, sheet_name="Panel_Data", index=False)
+
+                # Sheet 2: Context (Sentence-boundary context for each keyword occurrence)
+                if context_clean is not None and not context_clean.empty:
+                    ctx_cols = ["STT", "Firm", "Year", "Keyword", "Canonical",
+                                "Category", "Match_Type", "Similarity", "Sentence_Context"]
+                    existing_cols = [c for c in ctx_cols if c in context_clean.columns]
+                    extra_cols = [c for c in context_clean.columns if c not in ctx_cols]
+                    context_clean[existing_cols + extra_cols].to_excel(
+                        writer, sheet_name="Context", index=False
+                    )
+                else:
+                    pd.DataFrame(columns=[
+                        "STT", "Firm", "Year", "Keyword", "Canonical",
+                        "Category", "Match_Type", "Similarity", "Sentence_Context"
+                    ]).to_excel(writer, sheet_name="Context", index=False)
+
+                # Sheet 3: Raw_Keywords (Detailed frequency breakdown of raw keyword matches)
+                if raw_clean is not None and not raw_clean.empty:
+                    raw_clean.to_excel(writer, sheet_name="Raw_Keywords", index=False)
+                else:
+                    pd.DataFrame(columns=["Firm", "Year", "Keyword", "Category", "Frequency"]).to_excel(
+                        writer, sheet_name="Raw_Keywords", index=False
+                    )
+
+                # Sheet 4: Labor_Audit (Audit evidence of extracted total headcount)
+                if labor_clean is not None and not labor_clean.empty:
+                    labor_clean.to_excel(writer, sheet_name="Labor_Audit", index=False)
+
+                # Sheet 5: Codebook (Variable explanations & citations)
+                if variable_info:
+                    sanitize(pd.DataFrame(variable_info)).to_excel(writer, sheet_name="Codebook", index=False)
+
+                # Sheet 6: Company_Info (Danh sách doanh nghiệp niêm yết, bỏ cột IR)
+                panel_tickers = pd.Series(export_df["ticker"]).dropna().unique().tolist() if "ticker" in export_df.columns else None
+                company_df = load_company_info_df(tickers=panel_tickers)
+                if company_df is not None:
+                    sanitize(company_df).to_excel(writer, sheet_name="Company_Info", index=False)
+
+            # Apply premium styling & Cover Sheet (Trang_Bia)
+            try:
+                from arminer.export.excel_style import style_excel_file
+                style_excel_file(p)
+            except Exception as e:
+                logger.warning(f"Failed applying excel style to {p}: {e}")
+
+        elif fmt == "csv":
+            p = self.output_dir / "panel_data.csv"
+            export_df.to_csv(p, index=False, encoding="utf-8-sig")
+
+        elif fmt == "parquet":
+            p = self.output_dir / "panel_data.parquet"
+            export_df.to_parquet(p, index=False, engine="pyarrow")
+
+        elif fmt == "stata":
+            p = self.output_dir / "panel_data.dta"
+            sdf, labels = sanitize_stata_dataframe(export_df)
+            try:
+                sdf.to_stata(p, write_index=False, version=118, variable_labels=labels)
+            except Exception as e:
+                logger.warning(f"Stata export with labels failed ({e}), retrying without labels")
+                sdf.to_stata(p, write_index=False, version=118)
+        return p
+
+    def _descriptive(self, df: pd.DataFrame) -> Path:
+        p = self.output_dir / "descriptive_statistics.csv"
+        desc_df = build_descriptive_stats_table(df)
+        desc_df.to_csv(p, index=False, encoding="utf-8-sig")
+        return p
+
+    def _correlation(self, df: pd.DataFrame) -> Path:
+        p = self.output_dir / "correlation_matrix.csv"
+        corr_df = build_correlation_matrix(df)
+        corr_df.to_csv(p, index=False, encoding="utf-8-sig")
+        return p
+
+    def _codebook(self, info: List[Dict]) -> Path:
+        p = self.output_dir / "variable_codebook.csv"
+        pd.DataFrame(info).to_csv(p, index=False, encoding="utf-8-sig")
+        return p
+
+    def _report(self, df: pd.DataFrame, outputs: Dict[str, Path]) -> Path:
+        p = self.output_dir / "REPORT.md"
+        n = len(df)
+        firms = df["ticker"].nunique() if "ticker" in df.columns else "N/A"
+        yrs = df["year"].nunique() if "year" in df.columns else "N/A"
+        lines = [
+            "# Research Output Report (Báo Cáo Tổng Hợp Kết Quả)", "",
+            f"- Số quan sát (Observations): {n:,}",
+            f"- Số doanh nghiệp (Firms): {firms}",
+            f"- Số năm nghiên cứu (Years): {yrs}",
+            f"- Tổng số biến (Variables): {len(df.columns)}", "",
+            "## Danh Sách Tệp Kết Quả Đã Tạo (Output Files)", "",
+        ]
+        for name, path in outputs.items():
+            if path and path.exists():
+                sz = path.stat().st_size
+                sz_str = f"{sz/1024/1024:.1f} MB" if sz > 1024*1024 else f"{sz/1024:.1f} KB"
+                lines.append(f"- `{path.name}` ({sz_str})")
+        p.write_text("\n".join(lines), encoding="utf-8")
+        return p
+
+
+# =====================================================================
+# Helpers
+# =====================================================================
+
+def _find_col(headers: List[str], candidates: List[str]) -> Optional[str]:
+    """Find matching column name from candidates."""
+    for h in headers:
+        for c in candidates:
+            if h.strip().lower() == c.lower():
+                return h
+    return None
+
+
+def _find_col_idx(headers: List[str], candidates: List[str]) -> Optional[int]:
+    for i, h in enumerate(headers):
+        for c in candidates:
+            if h.strip().lower() == c.lower():
+                return i
+    return None

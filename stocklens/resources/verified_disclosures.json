@@ -1,0 +1,52 @@
+{
+  "FPT": {
+    "verified_at": "2026-10-09",
+    "verification_method": "Đối chiếu trực quan PDF công bố gốc của doanh nghiệp; số trang tính từ đầu file PDF.",
+    "shares": {
+      "value": 1885727648,
+      "as_of": "2026-09-25",
+      "published_date": "2026-09-25",
+      "page": 2,
+      "url": "https://fpt.com/api/media/20260925_FPT_TB_thay_doi_SLCP_dang_luu_hanh_sau_phat_hanh_CP_de_tang_von_51d7ab9f5c.pdf",
+      "sha256": "a101b25206828a3a1106be73f9eaca4b041a73815b9123bfb03f496509d923be"
+    },
+    "basis_change": {
+      "effective_date": "2026-01-01",
+      "published_date": "2026-03-18",
+      "page": 2,
+      "description": "FPT Telecom chuyển từ hợp nhất toàn bộ sang phương pháp vốn chủ sở hữu. Doanh thu và LNST hợp nhất không so trực tiếp giữa hai phương pháp; thông báo nêu LNST thuộc cổ đông mẹ không bị thay đổi bởi riêng việc đổi phương pháp.",
+      "url": "https://fpt.com/api/media/260318_fpt_cbtt_ve_viec_thay_doi_phuong_phap_hop_nhat_fpt_telecom_cff7ebd3f6.pdf",
+      "sha256": "668ca3cfc59b1e1782caa70c937ee7bc358842f9c4979c3565b62d16bee9415f"
+    },
+    "half_year": {
+      "period": "2026-H1",
+      "period_end": "2026-06-30",
+      "published_date": "2026-08-21",
+      "revenue": 26268500667974,
+      "profit_before_tax": 5714236316160,
+      "net_income": 5047128933102,
+      "net_income_parent": 5054958601533,
+      "eps_reported": 2967,
+      "operating_cash_flow": -1145666005788,
+      "prior_ocf": 1683573278329,
+      "equity": 40995680808257,
+      "non_controlling_equity": 1144212783327,
+      "cash_flow_basis": "Lũy kế 6 tháng; bằng tổng Q1 và Q2 độc lập của nguồn VCI đã đối chiếu.",
+      "income_page": 12,
+      "cash_flow_page": 13,
+      "equity_page": 11,
+      "url": "https://fpt.com/api/media/20260821_FPT_BCTC_hop_nhat_ban_nien_da_soat_xet_nam_2026_3b1ebb3536.pdf",
+      "sha256": "45636554f28c7e6c2f38458b9a22410ed1f67e80627d672b827019a67f299df8"
+    },
+    "comparable_growth": {
+      "period": "2026-H1",
+      "revenue_yoy": 0.126,
+      "profit_before_tax_yoy": 0.181,
+      "parent_profit_yoy": 0.141,
+      "eps_yoy": 0.134,
+      "basis": "Tỷ lệ tăng trưởng doanh nghiệp công bố trên cơ sở so sánh đã điều chỉnh; không suy ra mẫu số chính xác từ tỷ lệ làm tròn.",
+      "published_date": "2026-07-16",
+      "url": "https://fpt.com/vi/tin-tuc/6-thang-dau-nam-2026-loi-nhuan-truoc-thue-cua-fpt-tang-truong-18-1"
+    }
+  }
+}

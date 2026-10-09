@@ -1,0 +1,30 @@
+[
+  {
+    "ticker": "FPT",
+    "depth": "full",
+    "pages": 10,
+    "overflow": [],
+    "bytes": 367269
+  },
+  {
+    "ticker": "FPT",
+    "depth": "short",
+    "pages": 4,
+    "overflow": [],
+    "bytes": 206058
+  },
+  {
+    "ticker": "VCB",
+    "depth": "full",
+    "pages": 10,
+    "overflow": [],
+    "bytes": 375198
+  },
+  {
+    "ticker": "VCB",
+    "depth": "short",
+    "pages": 4,
+    "overflow": [],
+    "bytes": 203647
+  }
+]

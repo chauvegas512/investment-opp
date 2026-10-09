@@ -1,0 +1,11 @@
+{
+  "period": "2025",
+  "source": "https://bctn2025.fpt.com/",
+  "revenue_vnd": 70112825100710.0,
+  "group_net_profit_vnd": 11232339450734.0,
+  "official_rounded_billions": {
+    "revenue": 70113,
+    "group_net_profit": 11232
+  },
+  "comparison": "Passed; within rounding tolerance of one billion VND."
+}
