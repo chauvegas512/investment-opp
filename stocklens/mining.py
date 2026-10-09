@@ -70,19 +70,25 @@ def mine_pdf(content, keywords, filename):
             raise ValueError('PDF có mật khẩu; hãy dùng bản đã mở khóa.')
         if pdf.page_count > 500:
             raise ValueError('PDF vượt giới hạn 500 trang.')
-        findings, text_pages = [], 0
+        findings, text_pages, all_matches, total_words = [], 0, [], 0
         for page_no, page in enumerate(pdf):
             text = page.get_text()
+            total_words += len(text.split())
             if len(text.strip()) >= 30:
                 text_pages += 1
-            for match in matcher.search(text, use_fuzzy=False):
-                if len(findings) >= 80:
-                    break
+            matches=matcher.search(text,use_fuzzy=False)
+            all_matches.extend(matches)
+            for match in matches:
+                if len(findings) >= 80:continue
                 pos = match['position']
                 findings.append({'keyword': match['keyword_canonical'], 'page': page_no + 1,
                                  'snippet': ' '.join(text[max(0, pos-100):pos+240].split())})
+        metrics=module('arminer.mining.metrics').MetricsCalculator().calculate(all_matches,total_words)
         return {'filename': filename[:160], 'sha256': hashlib.sha256(content).hexdigest(),
                 'pages': pdf.page_count, 'text_pages': text_pages, 'findings': findings,
+                'total_words':total_words,'metrics':metrics,'keywords':terms,
+                'findings_truncated':len(all_matches)>len(findings),
+                'normalization_method':'Tổng lượt khớp / số token tách khoảng trắng × 10.000; toàn bộ lớp văn bản, không chỉ 80 trích đoạn lưu.',
                 'method': 'arminer exact keyword matching; có trang và trích đoạn để kiểm tra',
-                'warning': 'PDF scan cần OCR; hiện chỉ khai thác lớp văn bản.' if text_pages < pdf.page_count else '',
+                'warning': f'{pdf.page_count-text_pages}/{pdf.page_count} trang không đủ lớp văn bản; trang ảnh cần OCR nếu muốn khai phá.' if text_pages < pdf.page_count else '',
                 'uploaded_at': datetime.now(ZoneInfo('Asia/Ho_Chi_Minh')).isoformat(timespec='seconds')}

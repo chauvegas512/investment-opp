@@ -168,9 +168,11 @@ class EvidenceTests(unittest.TestCase):
         bundle=bundle_fixture()
         bundle['prices']=list(reversed(bundle['prices']))
         for i,row in enumerate(bundle['prices']):row['date']=pd.bdate_range(end='2026-10-09',periods=len(bundle['prices']))[i].strftime('%Y-%m-%d')
+        company,_,_,_,now=fixture()
+        bundle['signal'],_=evaluate(company,pd.DataFrame(bundle['prices']),pd.DataFrame(bundle['benchmark']),pd.DataFrame(bundle['annual']),now)
         markup=report_html(bundle)
         from research import enrich
-        ret=enrich(bundle)['research']['technical']['comparisons'][1]['stock_return']
+        ret=bundle['signal']['return_3m']
         self.assertLess(ret,0)
         self.assertIn(f'{ret*100:,.1f}%',markup)
         self.assertNotIn('data-layout-archetype="kpi"',markup)
@@ -184,7 +186,7 @@ class EvidenceTests(unittest.TestCase):
             self.assertEqual(document.page_count,markup.count('class="report-page"'))
             text='\n'.join(page.get_text() for page in document)
             self.assertIn('TEST',text)
-            self.assertIn('Phương pháp',text)
+            self.assertIn('phương pháp',text.lower())
             self.assertIn('Chưa lấy được',text)
 
 

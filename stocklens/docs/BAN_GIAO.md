@@ -11,7 +11,7 @@ Chạy `stocklens/start.ps1`, mở http://127.0.0.1:8787. Chọn cổ phiếu, �
 - X10: chiến lược FA/TA, kiểm tra độ phủ và chỉ báo. Không gán backtest danh mục cũ cho một mã đang phân tích.
 - Miner: catalog, lọc tin đúng doanh nghiệp, khai thác PDF người dùng với số trang và SHA-256.
 - `financial_adapter.py` đọc Parquet BCTC có sẵn trong Miner theo ticker; ánh xạ mã chỉ tiêu chính xác sang cấu trúc chung và giữ nguồn file/sheet. Lưu riêng trong bằng chứng để đối chiếu, ưu tiên VCI cho kỳ mới. Đã sửa current ratio của Miner thành tài sản ngắn hạn / nợ ngắn hạn và bỏ token dự phòng nhúng trong financial.py.
-- `report_engine.schema` và `report_engine.charts`: hợp đồng dữ liệu và biểu đồ tài chính. Template A4 StockLens đầy đủ 10 trang hoặc tóm tắt 4 trang, bổ sung nến/RSI/MACD/ATR, VN-Index cùng ngày, tài chính năm/quý, định giá theo đầu vào, sự kiện, kịch bản, theo dõi và nguồn.
+- `report_engine.schema` và `report_engine.charts`: hợp đồng dữ liệu và biểu đồ tài chính. Template A4 StockLens đầy đủ 8 trang hoặc tóm tắt 4 trang, bổ sung nến/RSI/MACD/ATR, VN-Index cùng ngày, tài chính năm/quý, định giá theo đầu vào, sự kiện, kịch bản, theo dõi và nguồn.
 - HoHa: giữ bản trình chiếu tại `/api/jobs/{id}/slides`.
 - Database StockLens riêng `data/stocklens.sqlite` lưu lịch sử phân tích; có thể mở lại sau khi khởi động. Không lưu API key trong database.
 

@@ -1,6 +1,6 @@
 # StockLens - Investment Opportunity Research
 
-Ứng dụng giữa kỳ phân tích cơ hội đầu tư cổ phiếu Việt Nam, tích hợp X10, Annual Report Miner, report_engine và HoHa. PDF A4 đầy đủ 10 trang hoặc tóm tắt 4 trang: kỹ thuật, VN-Index, tài chính, định giá có đầu vào, sự kiện, kịch bản và nguồn kiểm chứng.
+Ứng dụng giữa kỳ phân tích cơ hội đầu tư cổ phiếu Việt Nam, tích hợp X10, Annual Report Miner, report_engine và HoHa. PDF A4 đầy đủ 8 trang hoặc tóm tắt 4 trang: kỹ thuật, VN-Index, tài chính, định giá có đầu vào, sự kiện, kịch bản và nguồn kiểm chứng.
 
 ## Chạy trên Windows
 

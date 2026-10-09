@@ -35,6 +35,8 @@ def enrich(bundle):
     from disclosures import attach
     from indicators import technical_research
     attach(bundle)
+    from x10_context import enrich_context
+    enrich_context(bundle)
     facts=bundle.get('issuer_disclosures',{});basis=facts.get('basis_change',{}).get('effective_date','9999-01-01')
     company=bundle['company'];bank=bool(company.get('is_bank')) or 'ngân hàng' in str(company.get('industry','')).lower() or 'ngân hàng' in str(company.get('sector','')).lower()
     news=[]
@@ -106,8 +108,11 @@ def enrich(bundle):
     if half and any(not c['matched'] for c in checks):missing.append('Số liệu quý chưa khớp BCTC bán niên soát xét')
     signal=bundle['signal']
     if bank:
+        signal.setdefault('original_generic_decision_reason',signal.get('decision_reason'))
+        signal.setdefault('original_generic_fa_coverage',signal.get('fa_coverage'))
         signal.update(final_action='DATA_REVIEW',action_label='Ngân hàng: cần đánh giá chuyên ngành')
-        for key in ('fa_score','unified_score','debt_equity','current_ratio','net_debt_ebitda'):signal[key]=None
+        for key in ('fa_score','fa_coverage','unified_score','debt_equity','current_ratio','net_debt_ebitda'):signal[key]=None
+        signal['decision_reason']='DATA_REVIEW; ngân hàng; FA và unified_score không áp dụng; TA='+str(signal.get('ta_score'))+'; cần NIM, NPL, bao phủ nợ xấu, CAR đã kiểm chứng.'
         missing.extend(['NIM, NPL, bao phủ nợ xấu và CAR chưa xác minh'])
     fa=number(signal.get('fa_score'));coverage=number(signal.get('fa_coverage'))
     effective=50+(fa-50)*(coverage or 0) if fa is not None else None

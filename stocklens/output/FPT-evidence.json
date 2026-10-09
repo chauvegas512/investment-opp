@@ -73437,5 +73437,342 @@
       "published_date": "2026-07-16",
       "url": "https://fpt.com/vi/tin-tuc/6-thang-dau-nam-2026-loi-nhuan-truoc-thue-cua-fpt-tang-truong-18-1"
     }
+  },
+  "annual_insights": [
+    {
+      "filename": "FPT_2025_BCTN.pdf",
+      "sha256": "6dfe3ae09e6663c78021e24cefe0d745504c50e2892809915b3306d4fa9ec58c",
+      "pages": 233,
+      "text_pages": 231,
+      "findings": [
+        {
+          "keyword": "chuyển đổi số",
+          "page": 3,
+          "snippet": "hàng trăm dự án chuyển đổi số quy mô lớn tại Việt"
+        },
+        {
+          "keyword": "quản trị",
+          "page": 4,
+          "snippet": "cách các tổ chức quản trị và cách các quốc gia cạnh"
+        }
+      ],
+      "total_words": 117171,
+      "metrics": {
+        "frequency": 1141,
+        "diversity": 7,
+        "normalized_score": 97.379044,
+        "keyword_frequencies": {
+          "quản trị": 581,
+          "môi trường": 230,
+          "chuyển đổi số": 108,
+          "phát triển bền vững": 93,
+          "rủi ro": 92,
+          "bảo mật": 29,
+          "trí tuệ nhân tạo": 8
+        },
+        "by_category": {
+          "investment": {
+            "frequency": 1141,
+            "diversity": 7
+          }
+        }
+      },
+      "keywords": [
+        "rủi ro",
+        "quản trị",
+        "chuyển đổi số",
+        "trí tuệ nhân tạo",
+        "phát triển bền vững",
+        "môi trường",
+        "bảo mật"
+      ],
+      "findings_truncated": true,
+      "normalization_method": "Tổng lượt khớp / số token tách khoảng trắng × 10.000; toàn bộ lớp văn bản, không chỉ 80 trích đoạn lưu.",
+      "method": "arminer exact keyword matching; có trang và trích đoạn để kiểm tra",
+      "warning": "2/233 trang không đủ lớp văn bản; trang ảnh cần OCR nếu muốn khai phá.",
+      "uploaded_at": "2026-10-09T12:52:28+07:00",
+      "source_url": "https://fpt.com/api/media/20260408_fpt_bao_cao_thuong_nien_web_47ba292667.pdf",
+      "report_year": 2025,
+      "published_date": "2026-04-08",
+      "source": "Công bố FPT / Annual Miner",
+      "automatic": true,
+      "findings_limit": 2
+    }
+  ],
+  "x10_context": {
+    "status": "ARCHIVE_ALIGNED",
+    "classification_field": "industry",
+    "classification": "Công nghệ và thông tin",
+    "peer_count": 23,
+    "median_pe_ttm": 10.820821122950994,
+    "peers": [
+      {
+        "ticker": "ADC",
+        "as_of_utc": "2026-10-02 00:10:47",
+        "pe": null,
+        "market_cap": 60464627200.0,
+        "net_income_ttm": 11355468416.0,
+        "pe_ttm": 5.32471448864272
+      },
+      {
+        "ticker": "BED",
+        "as_of_utc": "2026-10-02 00:10:59",
+        "pe": null,
+        "market_cap": 76500000000.0,
+        "net_income_ttm": 4375139407.0,
+        "pe_ttm": 17.48515713067426
+      },
+      {
+        "ticker": "CMG",
+        "as_of_utc": "2026-10-02 00:11:17",
+        "pe": null,
+        "market_cap": 4937308449600.0,
+        "net_income_ttm": 393924641892.0,
+        "pe_ttm": 12.533636956262393
+      },
+      {
+        "ticker": "CTR",
+        "as_of_utc": "2026-10-02 00:11:22",
+        "pe": null,
+        "market_cap": 9172642562800.0,
+        "net_income_ttm": 654598066040.0,
+        "pe_ttm": 14.01263315409718
+      },
+      {
+        "ticker": "DAD",
+        "as_of_utc": "2026-10-02 00:11:23",
+        "pe": null,
+        "market_cap": 64296960000.0,
+        "net_income_ttm": 5237463523.0,
+        "pe_ttm": 12.276354712093715
+      },
+      {
+        "ticker": "DAE",
+        "as_of_utc": "2026-10-02 00:11:23",
+        "pe": null,
+        "market_cap": 25033554000.0,
+        "net_income_ttm": 2195395900.0,
+        "pe_ttm": 11.402751549276374
+      },
+      {
+        "ticker": "DST",
+        "as_of_utc": "2026-10-02 00:11:37",
+        "pe": null,
+        "market_cap": 231976800000.0,
+        "net_income_ttm": 2774367245.0,
+        "pe_ttm": 83.61430896290733
+      },
+      {
+        "ticker": "EBS",
+        "as_of_utc": "2026-10-02 00:11:46",
+        "pe": null,
+        "market_cap": 102645515200.0,
+        "net_income_ttm": 6303690550.0,
+        "pe_ttm": 16.283400079021963
+      },
+      {
+        "ticker": "ECI",
+        "as_of_utc": "2026-10-02 00:11:48",
+        "pe": null,
+        "market_cap": 16192000000.0,
+        "net_income_ttm": 3392313255.0,
+        "pe_ttm": 4.773144100455428
+      },
+      {
+        "ticker": "EID",
+        "as_of_utc": "2026-10-02 00:11:48",
+        "pe": null,
+        "market_cap": 253500000000.0,
+        "net_income_ttm": 59891076995.0,
+        "pe_ttm": 4.232683944240366
+      },
+      {
+        "ticker": "ELC",
+        "as_of_utc": "2026-10-02 00:11:48",
+        "pe": null,
+        "market_cap": 1542500214800.0,
+        "net_income_ttm": 138646495272.0,
+        "pe_ttm": 11.125418004788987
+      },
+      {
+        "ticker": "FPT",
+        "as_of_utc": "2026-10-02 00:11:51",
+        "pe": null,
+        "market_cap": 118800841824000.0,
+        "net_income_ttm": 9999322256386.0,
+        "pe_ttm": 11.880889402092091
+      },
+      {
+        "ticker": "GLT",
+        "as_of_utc": "2026-10-02 00:11:55",
+        "pe": null,
+        "market_cap": 267155188300.0,
+        "net_income_ttm": 21457180783.0,
+        "pe_ttm": 12.45061925896903
+      },
+      {
+        "ticker": "ICT",
+        "as_of_utc": "2026-10-02 00:12:25",
+        "pe": null,
+        "market_cap": 553582000000.0,
+        "net_income_ttm": 51158964159.0,
+        "pe_ttm": 10.820821122950994
+      },
+      {
+        "ticker": "ITD",
+        "as_of_utc": "2026-10-02 00:12:29",
+        "pe": null,
+        "market_cap": 336625266800.0,
+        "net_income_ttm": 71329391356.0,
+        "pe_ttm": 4.7193065915833605
+      },
+      {
+        "ticker": "KST",
+        "as_of_utc": "2026-10-02 00:12:35",
+        "pe": null,
+        "market_cap": 77896260000.0,
+        "net_income_ttm": 14559238436.0,
+        "pe_ttm": 5.35029770564024
+      },
+      {
+        "ticker": "LBE",
+        "as_of_utc": "2026-10-02 00:12:39",
+        "pe": null,
+        "market_cap": 71112608800.0,
+        "net_income_ttm": 18786249264.0,
+        "pe_ttm": 3.7853542663395165
+      },
+      {
+        "ticker": "ONE",
+        "as_of_utc": "2026-10-02 00:14:29",
+        "pe": null,
+        "market_cap": 75779116800.0,
+        "net_income_ttm": 13548062292.0,
+        "pe_ttm": 5.593354619040011
+      },
+      {
+        "ticker": "PIA",
+        "as_of_utc": "2026-10-02 00:15:02",
+        "pe": null,
+        "market_cap": 114270000000.0,
+        "net_income_ttm": 13919983533.0,
+        "pe_ttm": 8.209061435245305
+      },
+      {
+        "ticker": "QST",
+        "as_of_utc": "2026-10-02 00:16:11",
+        "pe": null,
+        "market_cap": 68040000000.0,
+        "net_income_ttm": 16428322972.0,
+        "pe_ttm": 4.141627853066048
+      },
+      {
+        "ticker": "SED",
+        "as_of_utc": "2026-10-02 00:16:43",
+        "pe": null,
+        "market_cap": 140004180000.0,
+        "net_income_ttm": 30514509507.0,
+        "pe_ttm": 4.588118316890631
+      },
+      {
+        "ticker": "SGD",
+        "as_of_utc": "2026-10-02 00:16:47",
+        "pe": null,
+        "market_cap": 56197700000.0,
+        "net_income_ttm": 1130447865.0,
+        "pe_ttm": 49.71277467979472
+      },
+      {
+        "ticker": "STC",
+        "as_of_utc": "2026-10-02 00:17:20",
+        "pe": null,
+        "market_cap": 63453936000.0,
+        "net_income_ttm": 7132260897.0,
+        "pe_ttm": 8.896749139770005
+      }
+    ],
+    "snapshot": {
+      "ticker": "FPT",
+      "as_of_utc": "2026-10-02 00:11:51",
+      "company_type": "Sản xuất",
+      "status": "OK",
+      "error": null,
+      "market_share": "82.450713429291284",
+      "total_assets": null,
+      "eps_ttm": 5302.633318756962,
+      "pe": null,
+      "ps": null,
+      "pb": null,
+      "beta": 0.7457307925757477,
+      "profit_growth_qoq": 0.03224907277667932,
+      "roe_ttm": 0.27065283408195234,
+      "roa_ttm": 0.1413640427458346,
+      "gross_margin_ttm": "0.34680228766296373",
+      "debt_equity_ratio": "0.45003588508124137",
+      "inventory_growth_qoq": "0.14684861444464392",
+      "free_float_ratio": "0.85",
+      "dividend_yield": 0.020876826722338204,
+      "book_value_per_share": 22559.64955133463,
+      "revenue_ttm": 63698471786157.0,
+      "net_income_ttm": 9999322256386.0,
+      "market_cap": 118800841824000.0
+    },
+    "stock_pe_ttm": 11.880889402092091,
+    "premium_pct": 9.796560418993415,
+    "snapshot_dates": [
+      "2026-10-02"
+    ],
+    "actions": [
+      {
+        "ticker": "FPT",
+        "ex_date": "2026-09-21 00:00:00",
+        "action_type": "bonus_shares",
+        "cash_dividend": null,
+        "stock_ratio": "0.1",
+        "split_ratio": null,
+        "rights_ratio": null,
+        "rights_price": null,
+        "source": "vnstock VCI",
+        "row_valid": 1
+      },
+      {
+        "ticker": "FPT",
+        "ex_date": "2026-06-24 00:00:00",
+        "action_type": "capital_increase",
+        "cash_dividend": null,
+        "stock_ratio": "0.00499",
+        "split_ratio": null,
+        "rights_ratio": null,
+        "rights_price": null,
+        "source": "vnstock VCI",
+        "row_valid": 1
+      },
+      {
+        "ticker": "FPT",
+        "ex_date": "2026-06-24 00:00:00",
+        "action_type": "capital_increase",
+        "cash_dividend": null,
+        "stock_ratio": "0.00135",
+        "split_ratio": null,
+        "rights_ratio": null,
+        "rights_price": null,
+        "source": "vnstock VCI",
+        "row_valid": 1
+      },
+      {
+        "ticker": "FPT",
+        "ex_date": "2026-05-28 00:00:00",
+        "action_type": "cash_dividend",
+        "cash_dividend": "1000.0",
+        "stock_ratio": null,
+        "split_ratio": null,
+        "rights_ratio": null,
+        "rights_price": null,
+        "source": "vnstock VCI",
+        "row_valid": 1
+      }
+    ],
+    "method": "X10: sector trước; ít hơn 5 bản ghi thì chuyển industry. P/E nguồn dương, nếu thiếu dùng vốn hóa/LNST TTM khi cả hai dương; loại P/E > 200. Mẫu có thể gồm chính mã đang phân tích.",
+    "note": "Snapshot lưu trữ, không phải định giá ngành tại phiên giá mới. Chỉ so P/E lưu trữ với mẫu cùng ngày; không gán giá mục tiêu và không đưa vào điểm FA."
   }
 }

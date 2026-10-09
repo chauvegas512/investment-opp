@@ -282,4 +282,11 @@ def fetch_bundle(ticker, progress=lambda message: None):
     bundle['miner_financial_audit']={'rows':clean(miner_financials.to_dict('records')),'conflicts':miner_conflicts,
         'note':'BCTC Miner dùng đối chiếu lịch sử; không tự bổ sung số liệu năm/quý hiện tại bằng dự đoán.'}
     from research import enrich
+    progress('Khai phá BCTN đã nhận diện từ công bố doanh nghiệp…')
+    try:
+        from annual_insights import fetch
+        bundle['annual_insights']=fetch(ticker)
+    except Exception as exc:
+        bundle['annual_insights']=[]
+        bundle['warnings'].append('BCTN tự động chưa khai phá được ('+type(exc).__name__+'); có thể tải PDF ở giao diện.')
     return enrich(bundle)

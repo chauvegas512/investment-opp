@@ -6,6 +6,7 @@ def build(b):
         return f'{value:,.0f} VND' if value is not None else 'chưa đủ dữ liệu'
     business=(f"Doanh thu năm {m['year']} tăng {m['revenue_growth']*100:.1f}%, LNST hợp nhất tăng {m['profit_growth']*100:.1f}%."
               if m.get('revenue_growth') is not None and m.get('profit_growth') is not None else 'Thiếu kỳ liền trước để xác nhận tăng trưởng năm.')
+    if r['quality']['bank'] and m.get('profit_growth') is not None:business=f"LNST hợp nhất năm {m['year']} tăng {m['profit_growth']*100:.1f}%; chưa đủ chỉ tiêu chuyên ngành để đánh giá chất lượng tín dụng."
     opportunities=[business,'Giá trị đầu tư cần được xác nhận bằng tăng trưởng lợi nhuận mẹ, dòng tiền và định giá có cùng cơ sở cổ phiếu.']
     if f.get('comparable_growth'):
         g=f['comparable_growth'];opportunities.insert(0,f"H1/2026: doanh nghiệp công bố doanh thu +{g['revenue_yoy']*100:.1f}% và LNST mẹ +{g['parent_profit_yoy']*100:.1f}% trên cơ sở so sánh điều chỉnh.")

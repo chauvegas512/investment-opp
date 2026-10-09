@@ -13,7 +13,7 @@ def verify():
     for ticker in ['FPT','VCB']:
         b=enrich(json.loads((ROOT/f'output/{ticker}-evidence.json').read_text(encoding='utf-8')))
         qa=ROOT/'tmp/pdfs'/ticker;qa.mkdir(parents=True,exist_ok=True)
-        for depth,count in [('full',10),('short',4)]:
+        for depth,count in [('full',8),('short',4)]:
             markup=report_html(b,depth=depth)
             (qa/f'{depth}.html').write_text(markup,encoding='utf-8')
             content=pdf_bytes(markup)
@@ -23,7 +23,7 @@ def verify():
                 assert doc.page_count==count,(ticker,depth,doc.page_count)
                 text='\n'.join(p.get_text() for p in doc)
                 assert '\ufffd' not in text
-                assert 'Phương pháp' in text
+                assert 'phương pháp' in text.lower()
                 assert '12×, 16×, 20×' not in text
                 for i,p in enumerate(doc):
                     if depth=='full':p.get_pixmap(matrix=pymupdf.Matrix(1.15,1.15)).save(qa/f'page-{i+1:02}.png')

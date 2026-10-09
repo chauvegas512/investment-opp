@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 import numpy as np,pandas as pd
 
-NAVY='#15394F';TEAL='#07887D';RED='#BE5849';GREY='#708A99';GOLD='#C99B44'
+NAVY='#1B1233';TEAL='#6C3BFF';RED='#FF4F9A';GREY='#887BA5';GOLD='#BE9400'
 
 def uri(fig):
     out=io.BytesIO();fig.savefig(out,format='png',dpi=190,bbox_inches='tight',facecolor='white');plt.close(fig)
@@ -50,3 +50,30 @@ def volume(data):
     fig,ax=plt.subplots(figsize=(7.4,1.7),layout='constrained')
     dates=pd.to_datetime(f.date);ax.bar(dates,f.volume/1e6,color=[TEAL if c>=o else RED for c,o in zip(f.close,f.open)],width=1,alpha=.55);ax.plot(dates,pd.to_numeric(f.volume_mean20,errors='coerce')/1e6,color=NAVY,lw=1,label='TB20 phiên trước');ax.set_ylabel('Triệu cổ phiếu',fontsize=8);ax.legend(fontsize=7,frameon=False);style(ax)
     return uri(fig)
+
+def strategy_price(data):
+    f=pd.DataFrame(data.get('series',[])).tail(120).reset_index(drop=True)
+    if f.empty:return None
+    fig,(ax,vol)=plt.subplots(2,1,figsize=(7.3,3.65),sharex=True,gridspec_kw={'height_ratios':[3,1]},layout='constrained');x=np.arange(len(f))
+    ax.plot(x,f.close/1000,color=TEAL,label='Giá',lw=1.5)
+    for key,color in [('ma20',RED),('ma50','#0098AE'),('ma200',GOLD)]:ax.plot(x,pd.to_numeric(f[key],errors='coerce')/1000,label=key.upper(),lw=1,color=color)
+    ax.set_ylabel('Nghìn VND',fontsize=8);ax.legend(fontsize=7,ncol=4,frameon=False)
+    vol.bar(x,f.volume/1e6,color=GREY,alpha=.55);vol.plot(x,pd.to_numeric(f.volume_mean20,errors='coerce')/1e6,color=TEAL,lw=.8)
+    vol.set_ylabel('Triệu CP',fontsize=7);ticks=np.linspace(0,len(f)-1,min(5,len(f))).astype(int);vol.set_xticks(ticks);vol.set_xticklabels(f.date.iloc[ticks].astype(str).str[:10],fontsize=7)
+    for a in (ax,vol):style(a)
+    return uri(fig)
+
+def health(rows):
+    f=pd.DataFrame(rows)
+    if f.empty:return None
+    fig,ax=plt.subplots(figsize=(7.3,2.4),layout='constrained')
+    for key,label,color in [('roe','ROE',TEAL),('roa','ROA',RED),('margin','Biên LNST','#0098AE')]:
+        if pd.to_numeric(f[key],errors='coerce').notna().any():ax.plot(f.year,pd.to_numeric(f[key],errors='coerce')*100,marker='o',ms=3,label=label,color=color)
+    ax.set_ylabel('%',fontsize=8);ax.legend(fontsize=7,ncol=3,frameon=False);style(ax);return uri(fig)
+
+def relative(data,ticker):
+    if data.get('premium_pct') is None:return None
+    fig,ax=plt.subplots(figsize=(7.3,2.1),layout='constrained')
+    vals=[data['stock_pe_ttm'],data['median_pe_ttm']];bars=ax.barh([ticker+' / lưu trữ','Trung vị nhóm'],vals,color=[TEAL,RED],height=.48)
+    for bar,value in zip(bars,vals):ax.text(value+.1,bar.get_y()+bar.get_height()/2,f'{value:.2f}×',va='center',fontsize=9)
+    ax.set_xlim(0,max(vals)*1.25);ax.set_xlabel('P/E TTM / lần',fontsize=8);style(ax);return uri(fig)

@@ -86,7 +86,7 @@
     "safety_score": null,
     "safety_coverage": 0.0,
     "fa_score": null,
-    "fa_coverage": 0.325,
+    "fa_coverage": null,
     "hard_reject_reason": "",
     "fa_status": "INSUFFICIENT_DATA",
     "fa_pass": false,
@@ -139,7 +139,7 @@
     "entry_eligible": false,
     "final_action": "DATA_REVIEW",
     "watch_reason": "MARKET_DEFENSIVE",
-    "decision_reason": "FA=44.6; coverage=32.0%; price_volume=0.0; unified=9.6; entry=60.0; exit=35.0; top=30; liquid=True; market_bull=False; price_fresh=True; reason=MARKET_DEFENSIVE",
+    "decision_reason": "DATA_REVIEW; ngân hàng; FA và unified_score không áp dụng; TA=0.0; cần NIM, NPL, bao phủ nợ xấu, CAR đã kiểm chứng.",
     "market_context": "DEFENSIVE_BELOW_REGIME_MA",
     "generated_at_utc": "2026-10-09T04:17:54+00:00",
     "original_screen_action": "WATCH",
@@ -147,7 +147,9 @@
     "ranking_note": "Phân tích một mã; chưa xếp hạng Top 30 toàn thị trường.",
     "action_label": "Ngân hàng: cần đánh giá chuyên ngành",
     "liquidity_note": "Giá trị giao dịch ước tính bằng giá đóng cửa × khối lượng; không phải giá trị khớp lệnh thực.",
-    "accounting_note": "LNST hợp nhất dùng cho ROE/ROA, biên lợi nhuận và tăng trưởng; LNST thuộc cổ đông công ty mẹ hiển thị riêng. EBIT ước tính = LNTT + |chi phí lãi vay|."
+    "accounting_note": "LNST hợp nhất dùng cho ROE/ROA, biên lợi nhuận và tăng trưởng; LNST thuộc cổ đông công ty mẹ hiển thị riêng. EBIT ước tính = LNTT + |chi phí lãi vay|.",
+    "original_generic_decision_reason": "FA=44.6; coverage=32.0%; price_volume=0.0; unified=9.6; entry=60.0; exit=35.0; top=30; liquid=True; market_bull=False; price_fresh=True; reason=MARKET_DEFENSIVE",
+    "original_generic_fa_coverage": 0.325
   },
   "created_at": "2026-10-09T11:17:16+07:00",
   "price_unit": "VND/cổ phiếu",
@@ -72796,7 +72798,7 @@
       "latest_quarter": "2026-Q2",
       "price_date": "2026-10-08",
       "technical_sessions": 420,
-      "fa_coverage": 0.325,
+      "fa_coverage": null,
       "verified_primary": false,
       "source_updated_at": "2026-10-09T11:17:16+07:00"
     },
@@ -72988,7 +72990,7 @@
     "horizon_note": "Điểm X10 20% FA / 80% TA thiên về ngắn hạn; 50/50 và 80/20 chỉ kiểm tra độ nhạy, không tự đổi khuyến nghị.",
     "thesis": {
       "opportunities": [
-        "Thiếu kỳ liền trước để xác nhận tăng trưởng năm.",
+        "LNST hợp nhất năm 2025 tăng 4.0%; chưa đủ chỉ tiêu chuyên ngành để đánh giá chất lượng tín dụng.",
         "Giá trị đầu tư cần được xác nhận bằng tăng trưởng lợi nhuận mẹ, dòng tiền và định giá có cùng cơ sở cổ phiếu."
       ],
       "risks": [
@@ -73045,5 +73047,297 @@
       ],
       "invalidation": "Luận điểm mất hiệu lực nếu dữ kiện nền bị sửa, BCTC mới phủ nhận tăng trưởng/dòng tiền, hoặc điều kiện kỹ thuật đã nêu không giữ được. Khi đó cần chạy lại phân tích."
     }
+  },
+  "x10_context": {
+    "status": "ARCHIVE_ALIGNED",
+    "classification_field": "sector",
+    "classification": "Trung gian tín dụng có nhận tiền gửi",
+    "peer_count": 25,
+    "median_pe_ttm": 8.506296437013713,
+    "peers": [
+      {
+        "ticker": "ACB",
+        "as_of_utc": "2026-10-02 00:10:45",
+        "pe": null,
+        "market_cap": 122473303292700.0,
+        "net_income_ttm": 15678140000000.0,
+        "pe_ttm": 7.811724049708703
+      },
+      {
+        "ticker": "BAB",
+        "as_of_utc": "2026-10-02 00:10:57",
+        "pe": null,
+        "market_cap": 12447547732800.0,
+        "net_income_ttm": 1196372000000.0,
+        "pe_ttm": 10.404412450976787
+      },
+      {
+        "ticker": "BID",
+        "as_of_utc": "2026-10-02 00:11:00",
+        "pe": null,
+        "market_cap": 279627349554350.0,
+        "net_income_ttm": 32255980000000.0,
+        "pe_ttm": 8.669008027483587
+      },
+      {
+        "ticker": "BVB",
+        "as_of_utc": "2026-10-02 00:11:09",
+        "pe": null,
+        "market_cap": 9824476500000.0,
+        "net_income_ttm": 779425000000.0,
+        "pe_ttm": 12.604774673637618
+      },
+      {
+        "ticker": "CTG",
+        "as_of_utc": "2026-10-02 00:11:22",
+        "pe": null,
+        "market_cap": 233008339110000.0,
+        "net_income_ttm": 40172760000000.0,
+        "pe_ttm": 5.800157597088176
+      },
+      {
+        "ticker": "EIB",
+        "as_of_utc": "2026-10-02 00:11:48",
+        "pe": null,
+        "market_cap": 31759386349350.0,
+        "net_income_ttm": 491857000000.0,
+        "pe_ttm": 64.57036567406787
+      },
+      {
+        "ticker": "EVF",
+        "as_of_utc": "2026-10-02 00:11:49",
+        "pe": null,
+        "market_cap": 8822563303200.0,
+        "net_income_ttm": 968137000000.0,
+        "pe_ttm": 9.112928545443465
+      },
+      {
+        "ticker": "HDB",
+        "as_of_utc": "2026-10-02 00:12:04",
+        "pe": null,
+        "market_cap": 137645098882500.0,
+        "net_income_ttm": 19096792000000.0,
+        "pe_ttm": 7.207760281543623
+      },
+      {
+        "ticker": "KLB",
+        "as_of_utc": "2026-10-02 00:12:31",
+        "pe": null,
+        "market_cap": 8763163542900.0,
+        "net_income_ttm": 2059500000000.0,
+        "pe_ttm": 4.254995650837582
+      },
+      {
+        "ticker": "LPB",
+        "as_of_utc": "2026-10-02 00:12:48",
+        "pe": null,
+        "market_cap": 131440412400000.0,
+        "net_income_ttm": 11292455000000.0,
+        "pe_ttm": 11.639666697808403
+      },
+      {
+        "ticker": "MBB",
+        "as_of_utc": "2026-10-02 00:12:51",
+        "pe": null,
+        "market_cap": 197850935240250.0,
+        "net_income_ttm": 30078169000000.0,
+        "pe_ttm": 6.577891601056234
+      },
+      {
+        "ticker": "MSB",
+        "as_of_utc": "2026-10-02 00:12:56",
+        "pe": null,
+        "market_cap": 53164800000000.0,
+        "net_income_ttm": 5890252000000.0,
+        "pe_ttm": 9.025895666263514
+      },
+      {
+        "ticker": "NAB",
+        "as_of_utc": "2026-10-02 00:13:00",
+        "pe": null,
+        "market_cap": 26553514068600.0,
+        "net_income_ttm": 4692138000000.0,
+        "pe_ttm": 5.6591502783166225
+      },
+      {
+        "ticker": "NVB",
+        "as_of_utc": "2026-10-02 00:14:27",
+        "pe": null,
+        "market_cap": 27522248339300.0,
+        "net_income_ttm": 264556000000.0,
+        "pe_ttm": 104.03184331219099
+      },
+      {
+        "ticker": "OCB",
+        "as_of_utc": "2026-10-02 00:14:29",
+        "pe": null,
+        "market_cap": 30931352272600.0,
+        "net_income_ttm": 4452815648565.0,
+        "pe_ttm": 6.946470438893688
+      },
+      {
+        "ticker": "SHB",
+        "as_of_utc": "2026-10-02 00:16:52",
+        "pe": null,
+        "market_cap": 61185408945100.0,
+        "net_income_ttm": 12145561000000.0,
+        "pe_ttm": 5.037676641293062
+      },
+      {
+        "ticker": "SSB",
+        "as_of_utc": "2026-10-02 00:17:17",
+        "pe": null,
+        "market_cap": 63305600000000.0,
+        "net_income_ttm": 2985332000000.0,
+        "pe_ttm": 21.205547657680956
+      },
+      {
+        "ticker": "STB",
+        "as_of_utc": "2026-10-02 00:17:20",
+        "pe": null,
+        "market_cap": 139505962984000.0,
+        "net_income_ttm": 3079916000000.0,
+        "pe_ttm": 45.29537915449642
+      },
+      {
+        "ticker": "TCB",
+        "as_of_utc": "2026-10-02 00:17:32",
+        "pe": null,
+        "market_cap": 230657125475699.97,
+        "net_income_ttm": 27116046000000.0,
+        "pe_ttm": 8.506296437013713
+      },
+      {
+        "ticker": "TPB",
+        "as_of_utc": "2026-10-02 00:18:11",
+        "pe": null,
+        "market_cap": 40084977314850.0,
+        "net_income_ttm": 7578974000000.0,
+        "pe_ttm": 5.288971477517933
+      },
+      {
+        "ticker": "VAB",
+        "as_of_utc": "2026-10-02 00:18:31",
+        "pe": null,
+        "market_cap": 8118675369000.0,
+        "net_income_ttm": 1408851029412.0,
+        "pe_ttm": 5.762621596967865
+      },
+      {
+        "ticker": "VBB",
+        "as_of_utc": "2026-10-02 00:18:31",
+        "pe": null,
+        "market_cap": 15755001833200.0,
+        "net_income_ttm": 1550537000000.0,
+        "pe_ttm": 10.160997017936367
+      },
+      {
+        "ticker": "VCB",
+        "as_of_utc": "2026-10-02 00:18:38",
+        "pe": null,
+        "market_cap": 484629155452000.0,
+        "net_income_ttm": 41648391000000.0,
+        "pe_ttm": 11.636203555906878
+      },
+      {
+        "ticker": "VIB",
+        "as_of_utc": "2026-10-02 00:19:00",
+        "pe": null,
+        "market_cap": 49867406464200.0,
+        "net_income_ttm": 7419112000000.0,
+        "pe_ttm": 6.721479129065581
+      },
+      {
+        "ticker": "VPB",
+        "as_of_utc": "2026-10-02 00:19:19",
+        "pe": null,
+        "market_cap": 234000000000000.0,
+        "net_income_ttm": 29815912000000.0,
+        "pe_ttm": 7.848158392740091
+      }
+    ],
+    "snapshot": {
+      "ticker": "VCB",
+      "as_of_utc": "2026-10-02 00:18:38",
+      "company_type": "Ngân hàng",
+      "status": "OK",
+      "error": null,
+      "market_share": null,
+      "total_assets": "2657440573000000.0",
+      "eps_ttm": 4984.4435705627975,
+      "pe": null,
+      "ps": null,
+      "pb": null,
+      "beta": 0.7281915070117447,
+      "profit_growth_qoq": 0.5377967012549799,
+      "roe_ttm": 0.18030418609791754,
+      "roa_ttm": 0.017095892237683763,
+      "gross_margin_ttm": null,
+      "debt_equity_ratio": null,
+      "inventory_growth_qoq": null,
+      "free_float_ratio": "0.11",
+      "dividend_yield": 0.00782608695652174,
+      "book_value_per_share": 28824.00001083623,
+      "revenue_ttm": 123988824000000.0,
+      "net_income_ttm": 41648391000000.0,
+      "market_cap": 484629155452000.0
+    },
+    "stock_pe_ttm": 11.636203555906878,
+    "premium_pct": 36.79518039453578,
+    "snapshot_dates": [
+      "2026-10-02"
+    ],
+    "actions": [
+      {
+        "ticker": "VCB",
+        "ex_date": "2026-07-23 00:00:00",
+        "action_type": "cash_dividend",
+        "cash_dividend": "450.0",
+        "stock_ratio": null,
+        "split_ratio": null,
+        "rights_ratio": null,
+        "rights_price": null,
+        "source": "vnstock VCI",
+        "row_valid": 1
+      },
+      {
+        "ticker": "VCB",
+        "ex_date": "2025-10-03 00:00:00",
+        "action_type": "cash_dividend",
+        "cash_dividend": "450.0",
+        "stock_ratio": null,
+        "split_ratio": null,
+        "rights_ratio": null,
+        "rights_price": null,
+        "source": "vnstock VCI",
+        "row_valid": 1
+      },
+      {
+        "ticker": "VCB",
+        "ex_date": "2025-03-12 00:00:00",
+        "action_type": "stock_dividend",
+        "cash_dividend": null,
+        "stock_ratio": "0.495",
+        "split_ratio": null,
+        "rights_ratio": null,
+        "rights_price": null,
+        "source": "vnstock VCI",
+        "row_valid": 1
+      },
+      {
+        "ticker": "VCB",
+        "ex_date": "2023-07-25 00:00:00",
+        "action_type": "stock_dividend",
+        "cash_dividend": null,
+        "stock_ratio": "0.181",
+        "split_ratio": null,
+        "rights_ratio": null,
+        "rights_price": null,
+        "source": "vnstock VCI",
+        "row_valid": 1
+      }
+    ],
+    "method": "X10: sector trước; ít hơn 5 bản ghi thì chuyển industry. P/E nguồn dương, nếu thiếu dùng vốn hóa/LNST TTM khi cả hai dương; loại P/E > 200. Mẫu có thể gồm chính mã đang phân tích.",
+    "note": "Snapshot lưu trữ, không phải định giá ngành tại phiên giá mới. Chỉ so P/E lưu trữ với mẫu cùng ngày; không gán giá mục tiêu và không đưa vào điểm FA."
   }
 }

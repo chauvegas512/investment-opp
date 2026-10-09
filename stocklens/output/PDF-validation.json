@@ -2,29 +2,29 @@
   {
     "ticker": "FPT",
     "depth": "full",
-    "pages": 10,
+    "pages": 8,
     "overflow": [],
-    "bytes": 367269
+    "bytes": 295487
   },
   {
     "ticker": "FPT",
     "depth": "short",
     "pages": 4,
     "overflow": [],
-    "bytes": 206058
+    "bytes": 198248
   },
   {
     "ticker": "VCB",
     "depth": "full",
-    "pages": 10,
+    "pages": 8,
     "overflow": [],
-    "bytes": 375198
+    "bytes": 333723
   },
   {
     "ticker": "VCB",
     "depth": "short",
     "pages": 4,
     "overflow": [],
-    "bytes": 203647
+    "bytes": 210816
   }
 ]

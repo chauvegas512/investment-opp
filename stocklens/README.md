@@ -1,6 +1,6 @@
 # StockLens - Phân tích cơ hội đầu tư cổ phiếu
 
-Ứng dụng giữa kỳ tích hợp X10, SQLite archive, Annual Report Miner, report_engine và HoHa. Nhập mã cổ phiếu Việt Nam, phân tích bằng dữ liệu thật, xem bằng chứng và xuất PDF A4 đầy đủ 10 trang hoặc tóm tắt 4 trang.
+Ứng dụng giữa kỳ tích hợp X10, SQLite archive, Annual Report Miner, report_engine và HoHa. Nhập mã cổ phiếu Việt Nam, phân tích bằng dữ liệu thật, xem bằng chứng và xuất PDF A4 đầy đủ 8 trang hoặc tóm tắt 4 trang.
 
 ## Chạy trên Windows
 
@@ -54,3 +54,5 @@ python verify_reports.py
 `verify_ui.py` kiểm tra server localhost đang chạy. Các fixture tổng hợp chỉ dùng trong test, không nằm trong luồng dữ liệu thật. PDF/JSON mẫu trong `output/` giữ ngày dữ liệu.
 
 Xem [cập nhật PDF](docs/CAP_NHAT_PDF.md), [bàn giao](docs/BAN_GIAO.md), [thiết kế hệ thống](docs/BAO_CAO_HE_THONG.md) và [ghi nhận nguồn](THIRD_PARTY_NOTICES.md). Điền thông tin thành viên, lớp và giảng viên theo thông tin thật của nhóm trước khi nộp.
+
+Thiết kế PDF 8 module theo X10 + Annual Miner: [PDF_8_MODULES.md](docs/PDF_8_MODULES.md).

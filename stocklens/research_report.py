@@ -14,6 +14,7 @@ def render(bundle,title,include_news=True,include_mining=True,horizon='medium',r
     bundle=enrich(bundle)
     from reports import fmt,financial_table
     import deep_charts
+    from report_modules import build
     schema=module('report_engine.schema');charts=module('report_engine.charts')
     periods=sorted({str(r['report_period']) for r in bundle['annual']})[-4:]
     values={p:values_for(bundle['annual'],p) for p in periods}
@@ -23,15 +24,16 @@ def render(bundle,title,include_news=True,include_mining=True,horizon='medium',r
         metrics={label:[values[p].get(key)/1e9 if values[p].get(key) is not None else None for p in periods] for label,key in finance_keys},
         units={label:'tỷ VND' for label,key in finance_keys},chart_keys=[label for label,key in finance_keys])
     r=bundle['research']
+    modules=build(bundle,include_mining)
     with LOCK:
-        visuals={'technical':deep_charts.technical(r['technical']),'performance':deep_charts.performance(r['technical']),
-                 'volume':deep_charts.volume(r['technical']),'finance':charts.fundamentals_chart(fundamental)}
+        visuals={'technical':deep_charts.strategy_price(r['technical']),'health':deep_charts.health(modules['health_trend']),
+                 'relative':deep_charts.relative(bundle.get('x10_context',{}),bundle['ticker']),'finance':charts.fundamentals_chart(fundamental)}
     qperiods=sorted({str(r['report_period']) for r in bundle.get('quarterly',[])})[-4:]
     qvalues={p:values_for(bundle['quarterly'],p) for p in qperiods}
     qtable=[['Chỉ tiêu (tỷ VND)',*qperiods]]
     for key,label in [('net_interest_income','Thu nhập lãi thuần') if bank else ('revenue','Doanh thu thuần'),('net_income','LNST hợp nhất'),('net_income_parent','LNST cổ đông mẹ'),('operating_cash_flow','Dòng tiền kinh doanh')]:
         qtable.append([label,*[fmt(qvalues[p][key]/1e9) if qvalues[p].get(key) is not None else 'Chưa có' for p in qperiods]])
-    sections=[1,2,3,4,5,6,7,8,9,10] if depth=='full' else [1,2,5,10]
+    sections=list(range(1,9)) if depth=='full' else [1,2,3,8]
     env=Environment(loader=FileSystemLoader(HERE/'templates'),autoescape=select_autoescape(['html']))
     env.filters['fmt']=fmt;env.filters['pct']=lambda v:fmt(v*100)+'%' if v is not None else 'Chưa có'
     env.filters['bn']=lambda v:fmt(v/1e9) if v is not None else 'Chưa có'
@@ -42,7 +44,7 @@ def render(bundle,title,include_news=True,include_mining=True,horizon='medium',r
         'balanced':('Cân bằng','Đánh giá đồng thời tài chính, định giá và kỹ thuật; không nâng kết luận từ một chỉ báo riêng.'),
         'active':('Chủ động','Theo dõi tín hiệu mỗi phiên; tốc độ cập nhật không thay thế yêu cầu kiểm chứng dữ liệu.')}
     return env.get_template('research.html').render(b=bundle,s=bundle['signal'],c=bundle['company'],r=r,v=visuals,title=title,
-        sections=sections,total=len(sections),annual_table=financial_table(bundle),quarter_table=qtable,
+        sections=sections,total=len(sections),annual_table=financial_table(bundle),quarter_table=qtable,m=modules,x=bundle.get('x10_context',{}),
         news=bundle.get('news',[]) if include_news else [],mining=bundle.get('mining',[]) if include_mining else [],
         horizon=horizons[horizon],risk=risks[risk],generated_at=datetime.now(ZoneInfo('Asia/Ho_Chi_Minh')).strftime('%Y-%m-%d %H:%M'),
         f=bundle.get('issuer_disclosures',{}))
