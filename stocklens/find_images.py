@@ -190,6 +190,9 @@ async def search_images(query: str, limit: int = 10) -> list[dict]:
     Returns:
         list[dict] voi keys: url, source_url, title
     """
+    global GOOGLE_API_KEY,GOOGLE_CSE_ID,SERPER_API_KEY,BRAVE_API_KEY
+    GOOGLE_API_KEY=os.environ.get('GOOGLE_API_KEY','');GOOGLE_CSE_ID=os.environ.get('GOOGLE_CSE_ID','')
+    SERPER_API_KEY=os.environ.get('SERPER_API_KEY','');BRAVE_API_KEY=os.environ.get('BRAVE_API_KEY','')
     timeout = aiohttp.ClientTimeout(total=20)
     user_agent = (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "

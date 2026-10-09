@@ -16,6 +16,8 @@ def render(bundle,title,include_news=True,include_mining=True,horizon='medium',r
     import deep_charts
     from report_modules import build
     from company_images import for_company
+    from company_profile import get
+    profile=get(bundle)
     images=for_company(bundle['ticker'],inline=True) if include_images else []
     schema=module('report_engine.schema');charts=module('report_engine.charts')
     periods=sorted({str(r['report_period']) for r in bundle['annual']})[-4:]
@@ -50,5 +52,5 @@ def render(bundle,title,include_news=True,include_mining=True,horizon='medium',r
         news=bundle.get('news',[]) if include_news else [],mining=bundle.get('mining',[]) if include_mining else [],
         horizon=horizons[horizon],risk=risks[risk],generated_at=datetime.now(ZoneInfo('Asia/Ho_Chi_Minh')).strftime('%Y-%m-%d %H:%M'),
         f=bundle.get('issuer_disclosures',{}),images=images,
-        logo=next((i for i in images if i['role']=='logo'),None),photos=[i for i in images if i['role']=='company'],
+        profile=profile,logo=next((i for i in images if i['role']=='logo'),None),photos=[i for i in images if i['role']=='company'],
         event_image=next((i for i in images if i['role']=='event'),None))

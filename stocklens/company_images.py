@@ -6,8 +6,9 @@ from integration import ROOT
 REGISTRY=ROOT/'resources/company_images.json'
 
 def for_company(ticker,inline=False):
-    if not REGISTRY.is_file():return []
-    rows=json.loads(REGISTRY.read_text(encoding='utf-8')).get(ticker,[]);out=[]
+    rows=json.loads(REGISTRY.read_text(encoding='utf-8')).get(ticker,[]) if REGISTRY.is_file() else []
+    from dynamic_images import selected
+    out=selected(ticker,inline)
     for row in rows:
         filename=row.get('filename','')
         if not re.fullmatch(r'[A-Za-z0-9_-]+\.(png|jpg|jpeg|webp|svg)',filename):continue

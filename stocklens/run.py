@@ -9,6 +9,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--port',type=int,default=8787)
     parser.add_argument('--stdin-key',action='store_true')
+    parser.add_argument('--stdin-image-key',action='store_true',help='Read Serper key with hidden input; keep only in process memory.')
     parser.add_argument('--restore-evidence',help='Restore a genuine previously exported evidence JSON for local presentation.')
     args = parser.parse_args()
     if args.stdin_key:
@@ -23,6 +24,10 @@ def main():
         # Load only an existing user-owned .env; never create it or call setup_api_key.
         from dotenv import load_dotenv
         load_dotenv(Path(__file__).resolve().parent.parent/'.env')
+    if args.stdin_image_key:
+        import getpass
+        image_key=getpass.getpass('Serper key (memory only): ').strip()
+        if image_key:os.environ['SERPER_API_KEY']=image_key
     # Server verification without SDK setup_api_key (which persists credentials).
     if os.getenv('VNSTOCK_API_KEY'):
         import requests

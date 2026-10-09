@@ -21,6 +21,8 @@ from reports import report_html, slide_html, pdf_bytes, financial_table, price_c
 
 app = FastAPI(title='StockLens', version='1.0.0', docs_url='/api/docs', redoc_url=None)
 app.mount('/static',StaticFiles(directory=ROOT/'static'),name='static')
+(ROOT/'data/image-cache').mkdir(parents=True,exist_ok=True)
+app.mount('/image-cache',StaticFiles(directory=ROOT/'data/image-cache'),name='image-cache')
 pool = ThreadPoolExecutor(max_workers=2, thread_name_prefix='stocklens')
 lock = threading.Lock()
 jobs = {}
@@ -51,8 +53,12 @@ def index():
 
 @app.get('/api/health')
 def health():
+    from dynamic_images import provider
+    with lock:
+        running_count=sum(j['status']=='running' for j in jobs.values())
     return {'name':'StockLens','integrations':status(),'data_mode':'live + read-only SQLite archive; no synthetic stock data',
-            'license_tier':os.getenv('STOCKLENS_TIER','NOT_CHECKED')}
+            'license_tier':os.getenv('STOCKLENS_TIER','NOT_CHECKED'),'image_provider':provider(),
+            'running_jobs':running_count}
 
 
 def run_job(identifier,ticker):
@@ -113,6 +119,8 @@ def job(identifier:str):
     if data.get('data'):
         from company_images import for_company
         data['data']['images']=for_company(data['data']['ticker'])
+        from dynamic_images import load
+        data['data']['image_search']=load(data['data']['ticker'])
     return data
 
 
@@ -121,6 +129,26 @@ def bundle_of(identifier):
     if job['status']!='done':
         raise HTTPException(409,'Phân tích chưa hoàn tất.')
     return job['data']
+
+@app.post('/api/jobs/{identifier}/images/search')
+async def find_company_images(identifier:str,force:bool=False):
+    b=bundle_of(identifier)
+    from dynamic_images import search
+    from company_images import for_company
+    curated=next((i for i in for_company(b['ticker']) if not i.get('id')),None)
+    website=b['company'].get('website') or (curated.get('source_url') if curated else None)
+    return await run_in_threadpool(search,b['ticker'],b['company'].get('company_name') or b['ticker'],force,website,b['company'].get('company_short_name'))
+
+class ImageChoice(BaseModel):
+    image_id:str=Field(pattern=r'^[a-f0-9]{32}$')
+    use:bool=True
+
+@app.post('/api/jobs/{identifier}/images/select')
+def choose_company_image(identifier:str,request:ImageChoice):
+    b=bundle_of(identifier)
+    from dynamic_images import choose
+    try:return choose(b['ticker'],request.image_id,request.use)
+    except ValueError as e:raise HTTPException(422,str(e)) from e
 
 
 @app.get('/api/jobs/{identifier}/chart',response_class=HTMLResponse)

@@ -20,6 +20,8 @@ def extract_overview(frame,ticker):
     if price and cap:shares=next((n for n in candidates if abs(n*float(price)/float(cap)-1)<1e-4),None)
     elif len(set(candidates))==1:shares=candidates[0]
     return clean({'shares_outstanding':shares,'listing_date':first('listing_date'),'is_bank':first('is_bank'),
+        'company_profile':(' '.join(str(first('company_profile')).split()[:24])+'…') if first('company_profile') else None,
+        'website':first('website'),'company_short_name':first('organ_short_name'),
         'provider_current_price':price,'provider_market_cap':cap,
         'overview_fetched_at':datetime.now(ZoneInfo('Asia/Ho_Chi_Minh')).isoformat(timespec='seconds'),
         'overview_source':'https://trading.vietcap.com.vn/','share_candidates':list(dict.fromkeys(candidates)),
