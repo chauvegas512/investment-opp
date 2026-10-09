@@ -1,0 +1,83 @@
+{
+  "FPT": [
+    {
+      "role": "logo",
+      "filename": "FPT-logo.svg",
+      "title": "Logo FPT",
+      "source_url": "https://fpt.com/vi",
+      "original_url": "https://fpt.com/fpt-logo.svg",
+      "sha256": "757ef41f73bd59341fcf3731eed9d102a180dc509821e66c0cfaff4e792d0eaf",
+      "verified_at": "2026-10-09",
+      "verification": "Đối chiếu ảnh/logo từ website chính thức; ảnh minh họa, không dùng trong điểm đầu tư.",
+      "rights_note": "Nguồn doanh nghiệp; logo thuộc chủ sở hữu. Không tuyên bố giấy phép sử dụng tự do."
+    },
+    {
+      "role": "company",
+      "filename": "FPT-tower.webp",
+      "title": "Không gian doanh nghiệp FPT",
+      "source_url": "https://fpt.com/vi",
+      "original_url": "https://fpt.com/images/homepage/FPT-tower-3.webp",
+      "sha256": "2bb25a85034eb68ba630684576a172640083fd31fe35e2a20d2d711e419a75e2",
+      "verified_at": "2026-10-09",
+      "verification": "Đối chiếu ảnh/logo từ website chính thức; ảnh minh họa, không dùng trong điểm đầu tư.",
+      "rights_note": "Nguồn doanh nghiệp; logo thuộc chủ sở hữu. Không tuyên bố giấy phép sử dụng tự do."
+    },
+    {
+      "role": "company",
+      "filename": "FPT-campus.webp",
+      "title": "FPT Campus",
+      "source_url": "https://fpt.com/vi",
+      "original_url": "https://fpt.com/images/homepage/join-width-us01.webp",
+      "sha256": "1fc194dcfe30f6d0b1c67952de7c8a5363771db1b4027f3aeb677d5dfa5e5823",
+      "verified_at": "2026-10-09",
+      "verification": "Đối chiếu ảnh/logo từ website chính thức; ảnh minh họa, không dùng trong điểm đầu tư.",
+      "rights_note": "Nguồn doanh nghiệp; logo thuộc chủ sở hữu. Không tuyên bố giấy phép sử dụng tự do."
+    },
+    {
+      "role": "event",
+      "filename": "FPT-nexty.webp",
+      "title": "FPT và Toyota Tsusho Nexty",
+      "source_url": "https://fpt.com/vi/tin-tuc/fpt-va-thanh-vien-toyota-thuc-day-hop-tac-linh-vuc-ban-dan-tai-asean-va-an-do",
+      "original_url": "https://fpt.com/api/media/1883_1791441791_2465c91a88.webp",
+      "sha256": "715f3dede847e038b1290e9fbc86a8746d79209a58c0080bc3bc877fc4e5b469",
+      "verified_at": "2026-10-09",
+      "verification": "Đối chiếu ảnh/logo từ website chính thức; ảnh minh họa, không dùng trong điểm đầu tư.",
+      "rights_note": "Nguồn doanh nghiệp; logo thuộc chủ sở hữu. Không tuyên bố giấy phép sử dụng tự do."
+    }
+  ],
+  "VCB": [
+    {
+      "role": "logo",
+      "filename": "VCB-logo.png",
+      "title": "Logo Vietcombank",
+      "source_url": "https://www.vietcombank.com.vn/vi-VN",
+      "original_url": "https://www.vietcombank.com.vn/-/media/Project/VCB-Sites/VCB/Home-page/VCB-Logo/Logo-VCB-no-60.png?ts=20240605031450",
+      "sha256": "f6c1fd797d75c4b1ff4fc62e3e5391338928a5615d91b2277df8af54fdcbe24e",
+      "verified_at": "2026-10-09",
+      "verification": "Đối chiếu ảnh/logo từ website chính thức; ảnh minh họa, không dùng trong điểm đầu tư.",
+      "rights_note": "Nguồn doanh nghiệp; logo thuộc chủ sở hữu. Không tuyên bố giấy phép sử dụng tự do."
+    },
+    {
+      "role": "company",
+      "filename": "VCB-building.jpg",
+      "title": "Tòa nhà Vietcombank / ảnh từ công bố doanh nghiệp",
+      "source_url": "https://www.vietcombank.com.vn/vi-VN/Trang-thong-tin-dien-tu/Article2023/Vietcombank-la-thuong-hieu-ngan-hang-gia-tri-nhat-tai-Viet-Nam",
+      "original_url": "https://www.vietcombank.com.vn/-/media/Project/VCB-Sites/VCB/Tin-tuc/20230823/Tin-tuc-Vietcombank/toanha1-resize.jpg?ts=20230823153314",
+      "sha256": "b45b1021ecc068c6c324ca7515023894b9b61128d24c9de849710b1a2935f768",
+      "verified_at": "2026-10-09",
+      "verification": "Đối chiếu ảnh/logo từ website chính thức; ảnh minh họa, không dùng trong điểm đầu tư.",
+      "rights_note": "Nguồn doanh nghiệp; logo thuộc chủ sở hữu. Không tuyên bố giấy phép sử dụng tự do."
+    },
+    {
+      "role": "company",
+      "filename": "VCB-profile.png",
+      "title": "Vietcombank / ảnh giới thiệu doanh nghiệp",
+      "source_url": "https://www.vietcombank.com.vn/vi-VN/Ve-Vietcombank",
+      "original_url": "https://www.vietcombank.com.vn/-/media/Project/VCB-Sites/VCB/Images/Media-With-Content/Image.png?h=500&iar=0&w=1312&ts=20230709003449&hash=DF41D3F75386F1643CA629C1A19AF332",
+      "sha256": "392db44f436259b827107c43026471eb2c1dd20e76d5b91e32fd2d2a03c48f64",
+      "verified_at": "2026-10-09",
+      "verification": "Đối chiếu ảnh/logo từ website chính thức; ảnh minh họa, không dùng trong điểm đầu tư.",
+      "rights_note": "Nguồn doanh nghiệp; logo thuộc chủ sở hữu. Không tuyên bố giấy phép sử dụng tự do."
+    }
+  ]
+}

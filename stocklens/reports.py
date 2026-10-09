@@ -149,9 +149,9 @@ def slide_html(bundle, title='Báo cáo phân tích cơ hội đầu tư', inclu
     return '<!doctype html><html lang="vi"><head><meta charset="utf-8"><title>'+html.escape(bundle['ticker']+' - StockLens')+'</title><style>'+css+'</style></head><body>'+''.join(pages)+'</body></html>'
 
 
-def report_html(bundle, title='Báo cáo phân tích cơ hội đầu tư', include_news=True, include_mining=True, horizon='medium', risk='balanced', depth='full'):
+def report_html(bundle, title='Báo cáo phân tích cơ hội đầu tư', include_news=True, include_mining=True, horizon='medium', risk='balanced', depth='full',include_images=True):
     from research_report import render
-    return render(bundle,title,include_news,include_mining,horizon,risk,depth)
+    return render(bundle,title,include_news,include_mining,horizon,risk,depth,include_images)
 
 
 def pdf_bytes(markup):

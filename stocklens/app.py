@@ -10,6 +10,7 @@ from typing import Literal
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse, Response
+from fastapi.staticfiles import StaticFiles
 from starlette.concurrency import run_in_threadpool
 from pydantic import BaseModel, Field
 
@@ -19,6 +20,7 @@ from mining import mine_pdf
 from reports import report_html, slide_html, pdf_bytes, financial_table, price_chart
 
 app = FastAPI(title='StockLens', version='1.0.0', docs_url='/api/docs', redoc_url=None)
+app.mount('/static',StaticFiles(directory=ROOT/'static'),name='static')
 pool = ThreadPoolExecutor(max_workers=2, thread_name_prefix='stocklens')
 lock = threading.Lock()
 jobs = {}
@@ -107,7 +109,11 @@ def listed_symbols():
 @app.get('/api/jobs/{identifier}')
 def job(identifier:str):
     current = job_of(identifier)
-    return clean({k:v for k,v in current.items() if k!='started'})
+    data=clean({k:v for k,v in current.items() if k!='started'})
+    if data.get('data'):
+        from company_images import for_company
+        data['data']['images']=for_company(data['data']['ticker'])
+    return data
 
 
 def bundle_of(identifier):
@@ -162,10 +168,10 @@ async def mine(identifier:str,request:Request,keywords:str,filename:str='bao-cao
 
 @app.get('/api/jobs/{identifier}/report',response_class=HTMLResponse)
 def report(identifier:str,title:str='Báo cáo phân tích cơ hội đầu tư',news:bool=True,mining:bool=True,
-           horizon:Literal['short','medium','long']='medium',risk:Literal['cautious','balanced','active']='balanced',depth:Literal['short','full']='full'):
+           horizon:Literal['short','medium','long']='medium',risk:Literal['cautious','balanced','active']='balanced',depth:Literal['short','full']='full',images:bool=True):
     if len(title)>100:
         raise HTTPException(422,'Tiêu đề tối đa 100 ký tự.')
-    return report_html(bundle_of(identifier),title,news,mining,horizon,risk,depth)
+    return report_html(bundle_of(identifier),title,news,mining,horizon,risk,depth,images)
 
 
 @app.get('/api/jobs/{identifier}/slides',response_class=HTMLResponse)
@@ -175,12 +181,12 @@ def slides(identifier:str):
 
 @app.get('/api/jobs/{identifier}/pdf')
 def pdf(identifier:str,title:str='Báo cáo phân tích cơ hội đầu tư',news:bool=True,mining:bool=True,
-        horizon:Literal['short','medium','long']='medium',risk:Literal['cautious','balanced','active']='balanced',depth:Literal['short','full']='full'):
+        horizon:Literal['short','medium','long']='medium',risk:Literal['cautious','balanced','active']='balanced',depth:Literal['short','full']='full',images:bool=True):
     if len(title)>100:
         raise HTTPException(422,'Tiêu đề tối đa 100 ký tự.')
     bundle = bundle_of(identifier)
     try:
-        content = pdf_bytes(report_html(bundle,title,news,mining,horizon,risk,depth))
+        content = pdf_bytes(report_html(bundle,title,news,mining,horizon,risk,depth,images))
     except Exception as exc:
         raise HTTPException(503,'Chưa xuất được PDF ('+type(exc).__name__+'). Kiểm tra Edge hoặc cài Chromium cho Playwright.') from exc
     return Response(content,media_type='application/pdf',headers={'Content-Disposition':f'attachment; filename="StockLens-{bundle["ticker"]}.pdf"'})

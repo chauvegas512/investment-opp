@@ -56,7 +56,7 @@ def clean(value):
     if isinstance(value, float) and not math.isfinite(value):
         return None
     if isinstance(value, str):
-        for name in ('VNSTOCK_API_KEY', 'DNSE_API_KEY', 'DNSE_API_SECRET'):
+        for name in ('VNSTOCK_API_KEY', 'DNSE_API_KEY', 'DNSE_API_SECRET','SERPER_API_KEY','GOOGLE_API_KEY','BRAVE_API_KEY'):
             secret = os.getenv(name)
             if secret:
                 value = value.replace(secret, '[REDACTED]')

@@ -10,11 +10,13 @@ from research_v2 import values_for
 
 LOCK=threading.Lock();HERE=Path(__file__).parent
 
-def render(bundle,title,include_news=True,include_mining=True,horizon='medium',risk='balanced',depth='full'):
+def render(bundle,title,include_news=True,include_mining=True,horizon='medium',risk='balanced',depth='full',include_images=True):
     bundle=enrich(bundle)
     from reports import fmt,financial_table
     import deep_charts
     from report_modules import build
+    from company_images import for_company
+    images=for_company(bundle['ticker'],inline=True) if include_images else []
     schema=module('report_engine.schema');charts=module('report_engine.charts')
     periods=sorted({str(r['report_period']) for r in bundle['annual']})[-4:]
     values={p:values_for(bundle['annual'],p) for p in periods}
@@ -47,4 +49,6 @@ def render(bundle,title,include_news=True,include_mining=True,horizon='medium',r
         sections=sections,total=len(sections),annual_table=financial_table(bundle),quarter_table=qtable,m=modules,x=bundle.get('x10_context',{}),
         news=bundle.get('news',[]) if include_news else [],mining=bundle.get('mining',[]) if include_mining else [],
         horizon=horizons[horizon],risk=risks[risk],generated_at=datetime.now(ZoneInfo('Asia/Ho_Chi_Minh')).strftime('%Y-%m-%d %H:%M'),
-        f=bundle.get('issuer_disclosures',{}))
+        f=bundle.get('issuer_disclosures',{}),images=images,
+        logo=next((i for i in images if i['role']=='logo'),None),photos=[i for i in images if i['role']=='company'],
+        event_image=next((i for i in images if i['role']=='event'),None))

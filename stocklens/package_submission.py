@@ -9,7 +9,7 @@ def files():
         if not p.is_file() or set(rel.parts)&{'tmp','data','__pycache__','.git','.agents','.codex'}:continue
         if p.name.startswith('.env') or p.name in {'upgrade_ui.py','AGENTS.md'}:continue
         if 'output' in rel.parts and p.name not in {'StockLens-FPT.pdf','StockLens-VCB.pdf','FPT-evidence.json','VCB-evidence.json','FPT-source-verification.json','PDF-validation.json'}:continue
-        if p.suffix.lower() in {'.py','.ps1','.md','.html','.txt','.json','.pdf'} or p.name=='.gitignore':yield p
+        if p.suffix.lower() in {'.py','.ps1','.md','.html','.css','.js','.txt','.json','.pdf','.svg','.png','.jpg','.jpeg','.webp'} or p.name=='.gitignore':yield p
     for name in ['vn_stock_scraper_complete.py','strategy_engine.py','strategy_config.json','model_portfolio.py']:
         yield BOT/name
     for p in (MINER/'src/arminer').rglob('*.py'):
@@ -38,7 +38,7 @@ def main():
     manifest=[]
     with zipfile.ZipFile(destination,'w',zipfile.ZIP_DEFLATED,compresslevel=1) as archive:
         for p in items:
-            if p.suffix in {'.py','.json','.html','.ps1','.md','.txt'}:
+            if p.suffix in {'.py','.json','.html','.css','.js','.svg','.ps1','.md','.txt'}:
                 raw=p.read_text(encoding='utf-8',errors='replace')
                 if re.search(r'vnstock_[0-9a-f]{32}|hf_[A-Za-z0-9]{25,}',raw):
                     raise ValueError('Credential-shaped literal detected; file omitted from package: '+p.name)

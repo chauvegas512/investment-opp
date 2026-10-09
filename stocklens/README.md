@@ -56,3 +56,5 @@ python verify_reports.py
 Xem [cập nhật PDF](docs/CAP_NHAT_PDF.md), [bàn giao](docs/BAN_GIAO.md), [thiết kế hệ thống](docs/BAO_CAO_HE_THONG.md) và [ghi nhận nguồn](THIRD_PARTY_NOTICES.md). Điền thông tin thành viên, lớp và giảng viên theo thông tin thật của nhóm trước khi nộp.
 
 Thiết kế PDF 8 module theo X10 + Annual Miner: [PDF_8_MODULES.md](docs/PDF_8_MODULES.md).
+
+Web và ảnh doanh nghiệp có nguồn: [WEB_VA_HINH_ANH.md](docs/WEB_VA_HINH_ANH.md).
