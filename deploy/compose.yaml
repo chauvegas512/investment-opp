@@ -1,0 +1,44 @@
+services:
+  backend:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    restart: unless-stopped
+    init: true
+    shm_size: 256mb
+    mem_limit: 1400m
+    memswap_limit: 2800m
+    environment:
+      TZ: Asia/Ho_Chi_Minh
+      VNSTOCK_DISABLE_AGENT_SETUP: '1'
+      SERPER_API_KEY: ${SERPER_API_KEY:-}
+      VNSTOCK_API_KEY: ${VNSTOCK_API_KEY:-}
+    volumes:
+      - stocklens_data:/app/stocklens/data
+      - ../archive:/app/dtata  full toping/analysis_data:ro
+    expose:
+      - '8787'
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+  proxy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      BACKEND_DOMAIN: ${BACKEND_DOMAIN:?Set the public backend domain}
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+volumes:
+  stocklens_data:
+  caddy_data:
+  caddy_config:

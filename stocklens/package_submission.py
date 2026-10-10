@@ -25,6 +25,8 @@ def files():
     yield HOHA/'assets/iconify/lucide-curated.json'
     for p in (MINER/'tests/fixtures').glob('*.csv'):
         yield p
+    for p in (MINER/'src/arminer/data/fixtures').glob('*.csv'):
+        yield p
     hoha_root=HOHA.parent.parent
     for name in ['LICENSE','NOTICE','MODIFICATIONS.md','THIRD_PARTY_NOTICES.md']:
         if (hoha_root/name).is_file():yield hoha_root/name

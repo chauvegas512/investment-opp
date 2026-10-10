@@ -1,0 +1,14 @@
+.git
+**/__pycache__
+**/.env
+**/.env.*
+**/.agents
+**/.codex
+**/tmp
+**/data/image-cache
+stocklens/data
+stocklens/output
+**/*.sqlite
+**/*.zip
+**/*.log
+deploy/vercel

@@ -13,3 +13,6 @@ stocklens/output/*.zip
 **/*.sqlite
 **/*.sqlite-*
 **/*.db
+deploy/vercel/
+archive/
+deploy/tmp/

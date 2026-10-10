@@ -28,9 +28,15 @@ def archive(ticker):
         return frames
 
 def symbols():
-    if not DATABASE.is_file(): return []
-    with connection() as conn:
-        return clean(pd.read_sql_query('SELECT ticker,company_name,exchange,sector FROM companies ORDER BY ticker',conn).to_dict('records'))
+    from integration import module,MINER
+    classifier=module('arminer.data.industry').IndustryClassifier(workspace_root=MINER)
+    classifier.initialize()
+    rows={ticker:{'ticker':ticker,'company_name':info.get('name') or ticker,'exchange':info.get('exchange'),'sector':info.get('icb_l1')} for ticker,info in classifier._ticker_full_map.items()}
+    if DATABASE.is_file():
+        with connection() as conn:
+            for row in pd.read_sql_query('SELECT ticker,company_name,exchange,sector FROM companies',conn).to_dict('records'):
+                rows[row['ticker']]={**rows.get(row['ticker'],{}),**{k:v for k,v in row.items() if v is not None and not pd.isna(v) and v!=''}}
+    return clean([rows[ticker] for ticker in sorted(rows)])
 
 def comparison(live, stored):
     """Record discrepancies rather than mixing financial concepts or provider vintages."""

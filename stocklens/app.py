@@ -27,6 +27,7 @@ pool = ThreadPoolExecutor(max_workers=2, thread_name_prefix='stocklens')
 image_pool=ThreadPoolExecutor(max_workers=2,thread_name_prefix='stocklens-images')
 image_running=set()
 refreshing=set()
+pdf_slot=threading.Semaphore(1)
 lock = threading.Lock()
 jobs = {}
 TTL = 6*3600
@@ -104,13 +105,13 @@ def analyze(request:AnalysisRequest):
     except ValueError as exc:
         raise HTTPException(422,str(exc)) from exc
     with lock:
-        expired = [i for i,j in jobs.items() if time.time()-j['started']>TTL and j['status']!='running']
+        expired = [i for i,j in jobs.items() if time.time()-j['started']>TTL and j['status']!='running' and i not in refreshing]
         for i in expired:
             jobs.pop(i)
-        if sum(j['status']=='running' for j in jobs.values())>=2:
+        if len(refreshing)+sum(j['status']=='running' for j in jobs.values())>=2:
             raise HTTPException(429,'Đang xử lý 2 mã. Đợi phân tích hoàn tất rồi thử lại.')
         if len(jobs)>=30:
-            oldest = next((i for i,j in jobs.items() if j['status']!='running'),None)
+            oldest = next((i for i,j in jobs.items() if j['status']!='running' and i not in refreshing),None)
             if oldest:
                 jobs.pop(oldest)
         identifier = secrets.token_urlsafe(18)
@@ -266,8 +267,11 @@ def pdf(identifier:str,title:str='Báo cáo phân tích cơ hội đầu tư',ne
     if len(title)>100:
         raise HTTPException(422,'Tiêu đề tối đa 100 ký tự.')
     bundle = bundle_of(identifier)
+    if not pdf_slot.acquire(blocking=False):
+        raise HTTPException(429,'Đang xuất một báo cáo PDF. Vui lòng thử lại sau vài giây.')
     try:
         content = pdf_bytes(report_html(bundle,title,news,mining,horizon,risk,depth,images))
     except Exception as exc:
         raise HTTPException(503,'Chưa xuất được PDF ('+type(exc).__name__+'). Kiểm tra Edge hoặc cài Chromium cho Playwright.') from exc
+    finally:pdf_slot.release()
     return Response(content,media_type='application/pdf',headers={'Content-Disposition':f'attachment; filename="StockLens-{bundle["ticker"]}.pdf"'})
